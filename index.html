@@ -1,0 +1,2018 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fdf7ef">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="비움로그">
+<title>비움로그 · Bium Log</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:#fdf7ef;color:#3d332c;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Helvetica Neue",sans-serif;
+    font-size:15px;line-height:1.55;letter-spacing:-.2px;
+  }
+  .tabr{position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
+  .app{max-width:440px;margin:0 auto;padding-bottom:34px}
+
+  /* header */
+  .hd{padding:20px 16px 14px;background:linear-gradient(165deg,#fff3e3 0%,#fbe3cd 100%)}
+  .hd .kicker{font-size:11px;font-weight:700;color:#c07b4c;letter-spacing:.4px;margin:0 0 4px}
+  .hd h1{margin:0;font-size:19.5px;font-weight:800;letter-spacing:-.6px;color:#3a2d24}
+  .hd h1 .en{font-size:12px;font-weight:700;color:#b08462;letter-spacing:0;margin-left:2px}
+  .hd .sub{margin:5px 0 0;font-size:12.5px;color:#a0805f;font-weight:600}
+
+  /* tabs */
+  .tabs{
+    position:sticky;top:0;z-index:20;display:flex;
+    background:#fffdf9;border-bottom:1px solid #f0e2d1;
+    padding:6px 6px 7px;box-shadow:0 2px 10px rgba(186,145,104,.09);
+  }
+  .tabs label{
+    flex:1 1 0;min-width:0;min-height:50px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    border-radius:12px;font-size:10.5px;font-weight:700;color:#a48d79;
+    line-height:1.15;padding:5px 1px;cursor:pointer;
+  }
+  .tabs label .ico{font-size:17px;line-height:1.15;margin-bottom:3px}
+  #tab1:checked ~ .app .tabs label[for="tab1"],
+  #tab2:checked ~ .app .tabs label[for="tab2"],
+  #tab3:checked ~ .app .tabs label[for="tab3"],
+  #tab4:checked ~ .app .tabs label[for="tab4"]{
+    background:#e8743b;color:#fff;box-shadow:0 4px 10px rgba(232,116,59,.3)
+  }
+
+  /* panels */
+  main{padding:13px 13px 0}
+  .panel{display:none}
+  #tab1:checked ~ .app #p1,
+  #tab2:checked ~ .app #p2,
+  #tab3:checked ~ .app #p3,
+  #tab4:checked ~ .app #p4{display:block}
+
+  .lead{margin:0 2px 11px;font-size:12.5px;color:#9c8570;font-weight:600}
+
+  .card{
+    background:#fffdfa;border:1px solid #f2e5d5;border-radius:16px;
+    padding:13px 13px 14px;margin:0 0 11px;
+    box-shadow:0 2px 7px rgba(180,140,100,.055);
+  }
+  .card h2{margin:0 0 9px;font-size:14.5px;font-weight:800;color:#3a2d24;letter-spacing:-.3px}
+  .card h2 .s{display:block;font-size:11.5px;font-weight:600;color:#a48d79;margin-top:2px}
+
+  /* rule card */
+  .rule{background:linear-gradient(160deg,#fff4e6,#fdeada);border-color:#f6d9bf}
+  .rule h2{margin-bottom:7px}
+  .q{font-size:13px;color:#8d5a2c;font-weight:700;line-height:1.75}
+  .q i{font-style:normal;color:#c9a17a;font-weight:600;padding:0 2px}
+  .q-ans{margin:7px 0 0;font-size:13px;color:#5e4630;font-weight:700;background:#fff;border-radius:10px;padding:8px 10px}
+  .q-ans b{color:#d4622a}
+  .tip{margin:8px 0 0;font-size:11.5px;color:#a4815c;font-weight:600}
+
+  /* progress */
+  .pbox{margin:0 0 11px;background:#fffdfa;border:1px solid #f2e5d5;border-radius:14px;padding:11px 13px}
+  .prow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .ptxt{font-size:12px;font-weight:700;color:#8a7561}
+  .ptxt b{color:#d4622a;font-size:13.5px}
+  .prog{height:8px;border-radius:99px;background:#f3e6d8;overflow:hidden;margin-top:8px}
+  .prog i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#f7a86f,#e8743b);transition:width .22s ease}
+  .prog-wrap,.reset{display:none}
+  html.js-on .prog-wrap{display:block}
+  html.js-on .reset{display:inline-flex}
+
+  .reset{
+    align-items:center;justify-content:center;min-height:44px;padding:0 13px;
+    border:1px solid #ecd9c4;border-radius:12px;background:#fffaf3;
+    color:#a4785a;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;
+  }
+  .btnrow{margin-top:9px;display:flex;gap:7px}
+  .btnrow .reset{flex:1}
+
+  /* accordion sections */
+  .sec{
+    border:1px solid #f4e7d7;border-radius:14px;margin:0 0 10px;
+    background:#fffdfa;overflow:hidden;
+  }
+  .sec-h{
+    display:flex;align-items:center;min-height:50px;padding:11px 12px;
+    background:#fff8ee;cursor:pointer;font-size:14px;font-weight:800;color:#43362c;
+  }
+  .sec-n{
+    flex:none;width:23px;height:23px;border-radius:8px;margin-right:9px;
+    background:#f7dcc4;color:#c25a25;font-size:12px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .sec-t{flex:1;min-width:0}
+  .cnt{
+    flex:none;font-size:11.5px;font-weight:700;color:#b08d6c;
+    background:#fff;border:1px solid #f0dfcc;border-radius:99px;padding:2px 8px;margin-left:6px;
+    display:none;
+  }
+  html.js-on .cnt{display:inline-block}
+  .chev{flex:none;margin-left:7px;color:#c8ac91;font-size:12px;transition:transform .16s ease}
+  .fold{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
+  .sec-b{display:none;padding:4px 5px 7px}
+  .fold:checked ~ .sec-b{display:block}
+  .fold:checked ~ .sec-h .chev{transform:rotate(180deg)}
+
+  /* item rows */
+  .item-row{
+    position:relative;display:flex;align-items:flex-start;
+    min-height:46px;padding:11px 8px;border-radius:10px;cursor:pointer;
+    border-bottom:1px solid #f9f1e7;
+  }
+  .item-row:last-of-type{border-bottom:0}
+  .inp,.item{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
+  .box{
+    flex:none;width:22px;height:22px;margin:1px 11px 0 0;border-radius:7px;
+    border:2px solid #e3ccb5;background:#fff;transition:background .12s,border-color .12s;
+  }
+  .item:checked ~ .box{background:#e8743b;border-color:#e8743b}
+  .item:checked ~ .box::after{
+    content:"";display:block;width:5px;height:10px;margin:2px auto 0;
+    border:2px solid #fff;border-top:0;border-left:0;transform:rotate(43deg);
+  }
+  .txt{flex:1;min-width:0;font-size:14px;color:#4a3f36;line-height:1.4}
+  .txt em{display:block;font-style:normal;font-size:11.5px;color:#a48d79;margin-top:2px;line-height:1.35}
+  .item:checked ~ .txt{color:#b5a595;text-decoration:line-through}
+  .item:checked ~ .txt em{color:#c3b5a5}
+
+  /* add row */
+  .only-js{display:none}
+  html.js-on .only-js{display:block}
+  .add{display:flex;gap:7px;margin:9px 0 0}
+  .add input[type="text"]{
+    flex:1;min-width:0;min-height:46px;padding:0 13px;font-size:14px;font-family:inherit;
+    color:#4a3f36;background:#fff;border:1px solid #ecdcc8;border-radius:12px;
+  }
+  .add input[type="text"]::placeholder{color:#c0ab97}
+  .add button{
+    flex:none;min-height:46px;padding:0 15px;border:0;border-radius:12px;
+    background:#e8743b;color:#fff;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;
+  }
+
+  /* menu days */
+  .day{border:1px solid #f2e5d5;border-radius:14px;margin:0 0 9px;background:#fffdfa;overflow:hidden}
+  .day-h{
+    display:flex;align-items:center;padding:9px 12px;background:#fff8ee;
+    font-size:13.5px;font-weight:800;color:#43362c;
+  }
+  .day-h .d{color:#c25a25;margin-right:6px}
+  .day-h .b{
+    margin-left:auto;font-size:10.5px;font-weight:800;color:#fff;
+    background:#e8743b;border-radius:99px;padding:2px 8px;
+  }
+  .day.today{border-color:#f3c49f;box-shadow:0 2px 9px rgba(232,116,59,.13)}
+  .day.today .day-h{background:#fde3cd}
+  .rows{padding:5px 12px 9px}
+  .row{display:flex;padding:3.5px 0;font-size:12.8px;border-bottom:1px dotted #f6ece1}
+  .row:last-child{border-bottom:0}
+  .row .k{flex:none;width:54px;font-size:11px;font-weight:700;color:#a48d79;padding-top:2px}
+  .row .v{flex:1;min-width:0;color:#4a3f36}
+  .h{
+    display:inline-block;font-style:normal;font-size:9.5px;font-weight:800;
+    color:#c25a25;background:#fbe6d3;border-radius:5px;padding:0 4px;margin-left:4px;vertical-align:1px;
+  }
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 3px}
+  .chip{font-size:12px;font-weight:700;color:#bd6a33;background:#fdf0e2;border-radius:99px;padding:6px 11px;line-height:1.1}
+
+  .note{font-size:11.5px;color:#a48d79;font-weight:600;margin:8px 0 0;line-height:1.5}
+  .note b{color:#c25a25}
+
+  .money{font-variant-numeric:tabular-nums}
+  .kv{display:flex;padding:5px 0;font-size:12.8px;border-bottom:1px dotted #f6ece1}
+  .kv:last-child{border-bottom:0}
+  .kv .k{flex:none;width:78px;font-size:11.5px;font-weight:700;color:#a48d79;padding-top:2px}
+  .kv .v{flex:1;min-width:0;color:#4a3f36}
+  .kv .v b{color:#c25a25}
+
+  .warn{
+    background:#fff6ec;border:1px solid #f6dcc2;border-radius:12px;
+    padding:9px 11px;font-size:12.3px;color:#8d5a2c;font-weight:700;line-height:1.5;margin:0 0 9px;
+  }
+  .warn b{color:#c2451a}
+
+  footer{padding:6px 16px 0;text-align:center;font-size:11px;color:#b9a692;line-height:1.65}
+  footer b{color:#a4815c}
+
+
+
+  /* ===== 비우기 달력 (순수 라디오 + :checked) ===== */
+  .calc{padding:12px 10px 10px}
+  .cal-hd{display:flex;align-items:center;gap:8px;padding:0 3px}
+  .cal-hd h2{margin:0;font-size:15px;flex:1;font-weight:800;color:#3a2d24}
+  .tot{flex:none;font-size:11px;font-weight:800;color:#fff;background:#e8743b;border-radius:99px;padding:4px 10px;white-space:nowrap}
+  .cal-sub{margin:3px 3px 9px;font-size:11.5px;color:#a48d79;font-weight:600}
+  .calr{position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .dw{text-align:center;font-size:10.5px;font-weight:700;color:#b39c88;padding:2px 0 3px}
+  .dw.sun{color:#d98b6a}
+  .dw.sat{color:#8fa7c6}
+  .cd{
+    position:relative;margin:0;display:flex;align-items:center;justify-content:center;
+    min-height:44px;border-radius:10px;border:1px solid #f5ebdf;background:#fffdfa;cursor:pointer;
+  }
+  .cd .n{font-size:13px;font-weight:700;color:#5b4c40;line-height:1}
+  .cd.blank{border:0;background:transparent;min-height:44px;cursor:default}
+  .cd.has{background:#fdeee0;border-color:#f4d5bb}
+  .cd.today{border-color:#e8743b}
+  .cd .b{
+    position:absolute;top:-4px;right:-3px;min-width:15px;height:15px;border-radius:99px;
+    background:#e8743b;color:#fff;font-size:9.5px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;padding:0 3px;
+  }
+  .cd.blank .b{display:none}
+  /* 선택된 날짜 */
+  #cd1:checked ~ .grid label[for="cd1"],  #cd2:checked ~ .grid label[for="cd2"],  #cd3:checked ~ .grid label[for="cd3"],  #cd4:checked ~ .grid label[for="cd4"],  #cd5:checked ~ .grid label[for="cd5"],  #cd6:checked ~ .grid label[for="cd6"],  #cd7:checked ~ .grid label[for="cd7"],  #cd8:checked ~ .grid label[for="cd8"],  #cd9:checked ~ .grid label[for="cd9"],  #cd10:checked ~ .grid label[for="cd10"],  #cd11:checked ~ .grid label[for="cd11"],  #cd12:checked ~ .grid label[for="cd12"],  #cd13:checked ~ .grid label[for="cd13"],  #cd14:checked ~ .grid label[for="cd14"],  #cd15:checked ~ .grid label[for="cd15"],  #cd16:checked ~ .grid label[for="cd16"],  #cd17:checked ~ .grid label[for="cd17"],  #cd18:checked ~ .grid label[for="cd18"],  #cd19:checked ~ .grid label[for="cd19"],  #cd20:checked ~ .grid label[for="cd20"],  #cd21:checked ~ .grid label[for="cd21"],  #cd22:checked ~ .grid label[for="cd22"],  #cd23:checked ~ .grid label[for="cd23"],  #cd24:checked ~ .grid label[for="cd24"],  #cd25:checked ~ .grid label[for="cd25"],  #cd26:checked ~ .grid label[for="cd26"],  #cd27:checked ~ .grid label[for="cd27"],  #cd28:checked ~ .grid label[for="cd28"],  #cd29:checked ~ .grid label[for="cd29"],  #cd30:checked ~ .grid label[for="cd30"]{
+    background:#e8743b;border-color:#e8743b;box-shadow:0 3px 8px rgba(232,116,59,.28)
+  }
+#cd1:checked ~ .grid label[for="cd1"] .n,
+#cd2:checked ~ .grid label[for="cd2"] .n,
+#cd3:checked ~ .grid label[for="cd3"] .n,
+#cd4:checked ~ .grid label[for="cd4"] .n,
+#cd5:checked ~ .grid label[for="cd5"] .n,
+#cd6:checked ~ .grid label[for="cd6"] .n,
+#cd7:checked ~ .grid label[for="cd7"] .n,
+#cd8:checked ~ .grid label[for="cd8"] .n,
+#cd9:checked ~ .grid label[for="cd9"] .n,
+#cd10:checked ~ .grid label[for="cd10"] .n,
+#cd11:checked ~ .grid label[for="cd11"] .n,
+#cd12:checked ~ .grid label[for="cd12"] .n,
+#cd13:checked ~ .grid label[for="cd13"] .n,
+#cd14:checked ~ .grid label[for="cd14"] .n,
+#cd15:checked ~ .grid label[for="cd15"] .n,
+#cd16:checked ~ .grid label[for="cd16"] .n,
+#cd17:checked ~ .grid label[for="cd17"] .n,
+#cd18:checked ~ .grid label[for="cd18"] .n,
+#cd19:checked ~ .grid label[for="cd19"] .n,
+#cd20:checked ~ .grid label[for="cd20"] .n,
+#cd21:checked ~ .grid label[for="cd21"] .n,
+#cd22:checked ~ .grid label[for="cd22"] .n,
+#cd23:checked ~ .grid label[for="cd23"] .n,
+#cd24:checked ~ .grid label[for="cd24"] .n,
+#cd25:checked ~ .grid label[for="cd25"] .n,
+#cd26:checked ~ .grid label[for="cd26"] .n,
+#cd27:checked ~ .grid label[for="cd27"] .n,
+#cd28:checked ~ .grid label[for="cd28"] .n,
+#cd29:checked ~ .grid label[for="cd29"] .n,
+#cd30:checked ~ .grid label[for="cd30"] .n{color:#fff}
+#cd1:checked ~ .grid label[for="cd1"] .b,
+#cd2:checked ~ .grid label[for="cd2"] .b,
+#cd3:checked ~ .grid label[for="cd3"] .b,
+#cd4:checked ~ .grid label[for="cd4"] .b,
+#cd5:checked ~ .grid label[for="cd5"] .b,
+#cd6:checked ~ .grid label[for="cd6"] .b,
+#cd7:checked ~ .grid label[for="cd7"] .b,
+#cd8:checked ~ .grid label[for="cd8"] .b,
+#cd9:checked ~ .grid label[for="cd9"] .b,
+#cd10:checked ~ .grid label[for="cd10"] .b,
+#cd11:checked ~ .grid label[for="cd11"] .b,
+#cd12:checked ~ .grid label[for="cd12"] .b,
+#cd13:checked ~ .grid label[for="cd13"] .b,
+#cd14:checked ~ .grid label[for="cd14"] .b,
+#cd15:checked ~ .grid label[for="cd15"] .b,
+#cd16:checked ~ .grid label[for="cd16"] .b,
+#cd17:checked ~ .grid label[for="cd17"] .b,
+#cd18:checked ~ .grid label[for="cd18"] .b,
+#cd19:checked ~ .grid label[for="cd19"] .b,
+#cd20:checked ~ .grid label[for="cd20"] .b,
+#cd21:checked ~ .grid label[for="cd21"] .b,
+#cd22:checked ~ .grid label[for="cd22"] .b,
+#cd23:checked ~ .grid label[for="cd23"] .b,
+#cd24:checked ~ .grid label[for="cd24"] .b,
+#cd25:checked ~ .grid label[for="cd25"] .b,
+#cd26:checked ~ .grid label[for="cd26"] .b,
+#cd27:checked ~ .grid label[for="cd27"] .b,
+#cd28:checked ~ .grid label[for="cd28"] .b,
+#cd29:checked ~ .grid label[for="cd29"] .b,
+#cd30:checked ~ .grid label[for="cd30"] .b{background:#fff;color:#e8743b}
+  /* 상세 박스 */
+  .dets{margin-top:10px}
+  .det{display:none}
+#cd1:checked ~ .dets #det1,
+#cd2:checked ~ .dets #det2,
+#cd3:checked ~ .dets #det3,
+#cd4:checked ~ .dets #det4,
+#cd5:checked ~ .dets #det5,
+#cd6:checked ~ .dets #det6,
+#cd7:checked ~ .dets #det7,
+#cd8:checked ~ .dets #det8,
+#cd9:checked ~ .dets #det9,
+#cd10:checked ~ .dets #det10,
+#cd11:checked ~ .dets #det11,
+#cd12:checked ~ .dets #det12,
+#cd13:checked ~ .dets #det13,
+#cd14:checked ~ .dets #det14,
+#cd15:checked ~ .dets #det15,
+#cd16:checked ~ .dets #det16,
+#cd17:checked ~ .dets #det17,
+#cd18:checked ~ .dets #det18,
+#cd19:checked ~ .dets #det19,
+#cd20:checked ~ .dets #det20,
+#cd21:checked ~ .dets #det21,
+#cd22:checked ~ .dets #det22,
+#cd23:checked ~ .dets #det23,
+#cd24:checked ~ .dets #det24,
+#cd25:checked ~ .dets #det25,
+#cd26:checked ~ .dets #det26,
+#cd27:checked ~ .dets #det27,
+#cd28:checked ~ .dets #det28,
+#cd29:checked ~ .dets #det29,
+#cd30:checked ~ .dets #det30{display:block}
+  .det-b{background:#fffaf3;border:1px solid #f3e2d0;border-radius:14px;padding:11px}
+  .det-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .dt{font-size:13px;font-weight:800;color:#43362c}
+  .db{font-size:11px;font-weight:800;color:#c25a25;background:#fbe6d3;border-radius:99px;padding:2px 8px}
+  .ph{display:block;width:100%;height:auto;border-radius:12px;border:1px solid #efdfcd;background:#f2e9df;margin-bottom:6px}
+  .kv2{display:flex;padding:5px 0;font-size:12.5px;border-bottom:1px dotted #f2e5d5}
+  .kv2:last-child{border-bottom:0}
+  .kv2 .k{flex:none;width:42px;font-size:11.5px;font-weight:700;color:#a48d79;padding-top:2px}
+  .kv2 .v{flex:1;min-width:0;color:#4a3f36;font-weight:700}
+  .empty{margin:0;padding:14px 6px;text-align:center;font-size:12.5px;color:#a1907d;line-height:1.65;font-weight:600}
+  .empty b{color:#c25a25}
+
+  /* 누적 기록 요약 */
+  .sumrow{display:flex;align-items:center;gap:12px;background:#fff6ec;border:1px solid #f6dcc2;border-radius:14px;padding:11px 13px;margin-bottom:9px}
+  .sum-big{flex:none;font-size:27px;font-weight:800;color:#d4622a;line-height:1;letter-spacing:-1px}
+  .sum-big b{font-weight:800}  .sum-big span{font-size:12px;font-weight:800;margin-left:1px}
+  .sum-txt{flex:1;min-width:0;font-size:12px;color:#8d5a2c;font-weight:700;line-height:1.5}
+  .sum-txt em{display:block;font-style:normal;color:#a4815c;font-weight:600;font-size:11.5px;margin-top:1px}
+  .rec{display:flex;gap:8px;font-size:12.3px;padding:7px 1px;border-bottom:1px dotted #f2e5d5;align-items:baseline}
+  .rec:last-of-type{border-bottom:0}
+  .rec .rt{flex:none;font-size:10.5px;font-weight:800;color:#c25a25;background:#fbe6d3;border-radius:6px;padding:1px 6px;white-space:nowrap}
+  .rec .rn{flex:1;min-width:0;color:#4a3f36;font-weight:600}
+
+  /* ===== 사진·기록 올리기 / 삭제 (JS 동작 환경) ===== */
+  .qk-note{margin:9px 0 0;padding:8px 10px;border:1px dashed #f0d3b6;border-radius:10px;background:#fff6ec;
+    font-size:11.5px;font-weight:700;color:#a4815c;line-height:1.5;text-align:center}
+  .qk-note b{color:#c25a25}
+  html.js-on .qk-note{display:none}
+
+  .det-h{flex-wrap:wrap;row-gap:6px}
+  .del{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;
+    min-height:40px;padding:0 14px;border:1px solid #f2c6a8;border-radius:99px;background:#fff;
+    color:#c2451a;font-size:11.5px;font-weight:800;font-family:inherit;letter-spacing:-.3px;cursor:pointer}
+  .del:active{background:#fdeee0}
+
+  .rec-item{padding:0 0 9px;margin:0 0 9px;border-bottom:1px dotted #f2e5d5}
+  .rec-item:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+  .rec-item .ph{margin-bottom:7px}
+
+  .addwrap{margin:10px 0 0}
+  .openAdd{display:flex;align-items:center;justify-content:center;width:100%;min-height:46px;
+    border:1px dashed #e8bb96;border-radius:12px;background:#fffaf3;color:#c2551f;
+    font-size:13px;font-weight:800;font-family:inherit;letter-spacing:-.3px;cursor:pointer}
+  .openAdd[aria-expanded="true"]{background:#fdeee0;border-style:solid}
+  .addbox{margin:8px 0 0;padding:10px;border:1px solid #f0dfcc;border-radius:12px;background:#fff}
+  .addbox[hidden]{display:none}
+  .addbox .filepick{position:relative;display:flex;align-items:center;gap:7px;min-height:46px;padding:0 11px;
+    border:1px solid #ecdcc8;border-radius:10px;background:#fffaf3;cursor:pointer;
+    font-size:12.5px;font-weight:800;color:#8d6a4c}
+  .addbox .filepick input[type="file"]{position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0}
+  .addbox .filepick .fname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-size:11.5px;font-weight:600;color:#b09a85}
+  .addbox .filepick.picked{border-color:#e8743b;background:#fdeee0}
+  .addbox .filepick.picked .fname{color:#a5531f}
+  .addbox .addrow{display:flex;gap:7px;align-items:center;margin:7px 0 0}
+  .addbox input[type="text"],.addbox input[type="number"]{min-height:46px;padding:0 11px;font-size:13.5px;
+    -webkit-appearance:none;appearance:none;font-family:inherit;color:#4a3f36;background:#fff;
+    border:1px solid #ecdcc8;border-radius:10px}
+  .addbox input[type="text"]{flex:1;min-width:0}
+  .addbox input[type="text"]::placeholder{color:#c0ab97}
+  .addbox input[type="number"]{flex:none;width:66px;text-align:center;font-variant-numeric:tabular-nums}
+  .addbox .qtylab{flex:none;font-size:11.5px;font-weight:700;color:#a48d79}
+  .addbox .submitrow{display:flex;margin:7px 0 0}
+  .addbox .submitbtn{flex:1;min-height:46px;border:0;border-radius:12px;background:#e8743b;color:#fff;
+    -webkit-appearance:none;appearance:none;
+    font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer}
+  .addbox .submitbtn[disabled]{background:#dfc7b3}
+  .addbox .addmsg{margin:7px 0 0;font-size:11.5px;font-weight:700;color:#b4551f;line-height:1.45}
+  .addbox .addmsg:empty{display:none}
+  .addbox .addmsg.ok{color:#3f7d4e}
+  .rec .del{min-height:32px;padding:0 10px;font-size:10.5px;margin-left:2px}
+  .rec{align-items:center}
+
+  .js-only{display:none}
+  html.js-on .js-only{display:inline-flex}
+
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99;display:none;
+    max-width:86vw;padding:10px 16px;border-radius:99px;background:#3d332c;color:#fff;
+    font-size:12.5px;font-weight:700;line-height:1.4;text-align:center;
+    box-shadow:0 6px 18px rgba(0,0,0,.24)}
+
+</style>
+</head>
+<body>
+
+<input type="radio" name="tab" id="tab1" class="tabr" checked>
+<input type="radio" name="tab" id="tab2" class="tabr">
+<input type="radio" name="tab" id="tab3" class="tabr">
+<input type="radio" name="tab" id="tab4" class="tabr">
+
+<div class="app">
+  <header class="hd">
+    <p class="kicker">마이 홈</p>
+    <h1>비움로그 <span class="en">Bium Log</span></h1>
+    <p class="sub">이사 대비 · 살림 반 줄이기</p>
+  </header>
+
+  <nav class="tabs">
+    <label for="tab1"><span class="ico">🧹</span>살림 비우기</label>
+    <label for="tab2"><span class="ico">🍽️</span>식단·장보기</label>
+    <label for="tab3"><span class="ico">🏫</span>직장</label>
+    <label for="tab4"><span class="ico">💰</span>집·이사</label>
+  </nav>
+
+  <main>
+
+    <!-- ============ TAB 1 ============ -->
+    <section class="panel" id="p1">
+      <p class="lead">부피 큰 것부터 반으로 줄이기 · 하루 15분, 한 칸만</p>
+
+      <div class="card calc">
+        <div class="cal-hd">
+          <h2>🗑️ 비우기 달력</h2>
+          <span class="tot" id="totBadge">누적 1개</span>
+        </div>
+        <p class="cal-sub">2026년 11월 · 날짜를 누르면 그날 사진이 보여요</p>
+  <input type="radio" name="cal-day" id="cd1" class="calr">
+  <input type="radio" name="cal-day" id="cd2" class="calr">
+  <input type="radio" name="cal-day" id="cd3" class="calr">
+  <input type="radio" name="cal-day" id="cd4" class="calr">
+  <input type="radio" name="cal-day" id="cd5" class="calr">
+  <input type="radio" name="cal-day" id="cd6" class="calr">
+  <input type="radio" name="cal-day" id="cd7" class="calr">
+  <input type="radio" name="cal-day" id="cd8" class="calr">
+  <input type="radio" name="cal-day" id="cd9" class="calr">
+  <input type="radio" name="cal-day" id="cd10" class="calr">
+  <input type="radio" name="cal-day" id="cd11" class="calr">
+  <input type="radio" name="cal-day" id="cd12" class="calr">
+  <input type="radio" name="cal-day" id="cd13" class="calr">
+  <input type="radio" name="cal-day" id="cd14" class="calr">
+  <input type="radio" name="cal-day" id="cd15" class="calr">
+  <input type="radio" name="cal-day" id="cd16" class="calr">
+  <input type="radio" name="cal-day" id="cd17" class="calr" checked>
+  <input type="radio" name="cal-day" id="cd18" class="calr">
+  <input type="radio" name="cal-day" id="cd19" class="calr">
+  <input type="radio" name="cal-day" id="cd20" class="calr">
+  <input type="radio" name="cal-day" id="cd21" class="calr">
+  <input type="radio" name="cal-day" id="cd22" class="calr">
+  <input type="radio" name="cal-day" id="cd23" class="calr">
+  <input type="radio" name="cal-day" id="cd24" class="calr">
+  <input type="radio" name="cal-day" id="cd25" class="calr">
+  <input type="radio" name="cal-day" id="cd26" class="calr">
+  <input type="radio" name="cal-day" id="cd27" class="calr">
+  <input type="radio" name="cal-day" id="cd28" class="calr">
+  <input type="radio" name="cal-day" id="cd29" class="calr">
+  <input type="radio" name="cal-day" id="cd30" class="calr">
+        <div class="grid">
+      <span class="dw sun">일</span>
+      <span class="dw">월</span>
+      <span class="dw">화</span>
+      <span class="dw">수</span>
+      <span class="dw">목</span>
+      <span class="dw">금</span>
+      <span class="dw sat">토</span>
+      <label class="cd" for="cd1" aria-label="11월 1일 기록 없음" ><span class="n">1</span></label>
+      <label class="cd" for="cd2" aria-label="11월 2일 기록 없음" ><span class="n">2</span></label>
+      <label class="cd" for="cd3" aria-label="11월 3일 기록 없음" ><span class="n">3</span></label>
+      <label class="cd" for="cd4" aria-label="11월 4일 기록 없음" ><span class="n">4</span></label>
+      <label class="cd" for="cd5" aria-label="11월 5일 기록 없음" ><span class="n">5</span></label>
+      <label class="cd" for="cd6" aria-label="11월 6일 기록 없음" ><span class="n">6</span></label>
+      <label class="cd" for="cd7" aria-label="11월 7일 기록 없음" ><span class="n">7</span></label>
+      <label class="cd" for="cd8" aria-label="11월 8일 기록 없음" ><span class="n">8</span></label>
+      <label class="cd" for="cd9" aria-label="11월 9일 기록 없음" ><span class="n">9</span></label>
+      <label class="cd" for="cd10" aria-label="11월 10일 기록 없음" ><span class="n">10</span></label>
+      <label class="cd" for="cd11" aria-label="11월 11일 기록 없음" ><span class="n">11</span></label>
+      <label class="cd" for="cd12" aria-label="11월 12일 기록 없음" ><span class="n">12</span></label>
+      <label class="cd" for="cd13" aria-label="11월 13일 기록 없음" ><span class="n">13</span></label>
+      <label class="cd" for="cd14" aria-label="11월 14일 기록 없음" ><span class="n">14</span></label>
+      <label class="cd" for="cd15" aria-label="11월 15일 기록 없음" ><span class="n">15</span></label>
+      <label class="cd" for="cd16" aria-label="11월 16일 기록 없음" ><span class="n">16</span></label>
+      <label class="cd has today" for="cd17" aria-label="11월 17일 1개" ><span class="n">17</span><span class="b">1</span></label>
+      <label class="cd" for="cd18" aria-label="11월 18일 기록 없음" ><span class="n">18</span></label>
+      <label class="cd" for="cd19" aria-label="11월 19일 기록 없음" ><span class="n">19</span></label>
+      <label class="cd" for="cd20" aria-label="11월 20일 기록 없음" ><span class="n">20</span></label>
+      <label class="cd" for="cd21" aria-label="11월 21일 기록 없음" ><span class="n">21</span></label>
+      <label class="cd" for="cd22" aria-label="11월 22일 기록 없음" ><span class="n">22</span></label>
+      <label class="cd" for="cd23" aria-label="11월 23일 기록 없음" ><span class="n">23</span></label>
+      <label class="cd" for="cd24" aria-label="11월 24일 기록 없음" ><span class="n">24</span></label>
+      <label class="cd" for="cd25" aria-label="11월 25일 기록 없음" ><span class="n">25</span></label>
+      <label class="cd" for="cd26" aria-label="11월 26일 기록 없음" ><span class="n">26</span></label>
+      <label class="cd" for="cd27" aria-label="11월 27일 기록 없음" ><span class="n">27</span></label>
+      <label class="cd" for="cd28" aria-label="11월 28일 기록 없음" ><span class="n">28</span></label>
+      <label class="cd" for="cd29" aria-label="11월 29일 기록 없음" ><span class="n">29</span></label>
+      <label class="cd" for="cd30" aria-label="11월 30일 기록 없음" ><span class="n">30</span></label>
+      <span class="cd blank"></span>
+      <span class="cd blank"></span>
+      <span class="cd blank"></span>
+      <span class="cd blank"></span>
+      <span class="cd blank"></span>
+        </div>
+        <div class="dets">
+        <div class="det" id="det1">
+          <div class="det-b" data-day="1">
+            <div class="recs" data-day="1"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det2">
+          <div class="det-b" data-day="2">
+            <div class="recs" data-day="2"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det3">
+          <div class="det-b" data-day="3">
+            <div class="recs" data-day="3"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det4">
+          <div class="det-b" data-day="4">
+            <div class="recs" data-day="4"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det5">
+          <div class="det-b" data-day="5">
+            <div class="recs" data-day="5"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det6">
+          <div class="det-b" data-day="6">
+            <div class="recs" data-day="6"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det7">
+          <div class="det-b" data-day="7">
+            <div class="recs" data-day="7"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det8">
+          <div class="det-b" data-day="8">
+            <div class="recs" data-day="8"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det9">
+          <div class="det-b" data-day="9">
+            <div class="recs" data-day="9"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det10">
+          <div class="det-b" data-day="10">
+            <div class="recs" data-day="10"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det11">
+          <div class="det-b" data-day="11">
+            <div class="recs" data-day="11"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det12">
+          <div class="det-b" data-day="12">
+            <div class="recs" data-day="12"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det13">
+          <div class="det-b" data-day="13">
+            <div class="recs" data-day="13"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det14">
+          <div class="det-b" data-day="14">
+            <div class="recs" data-day="14"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det15">
+          <div class="det-b" data-day="15">
+            <div class="recs" data-day="15"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det16">
+          <div class="det-b" data-day="16">
+            <div class="recs" data-day="16"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det17">
+          <div class="det-b" data-day="17">
+            <div class="seed-rec" id="seedRec">
+              <div class="det-h"><span class="dt">11월 17일 (화)</span><span class="db">1개 비움</span></div>
+            <img class="ph" src="data:image/jpeg;base64,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" alt="11월 17일 비운 물건 타임스탬프 사진">
+            <div class="kv2"><span class="k">품목</span><span class="v">TV 리모컨 (연습 1개)</span></div>
+            <div class="kv2"><span class="k">시각</span><span class="v">23:30</span></div>
+            <div class="kv2"><span class="k">사진</span><span class="v">타임스탬프 사진 1장</span></div>
+            </div>
+            <div class="recs" data-day="17"></div>
+            <p class="empty" style="display:none">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det18">
+          <div class="det-b" data-day="18">
+            <div class="recs" data-day="18"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det19">
+          <div class="det-b" data-day="19">
+            <div class="recs" data-day="19"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det20">
+          <div class="det-b" data-day="20">
+            <div class="recs" data-day="20"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det21">
+          <div class="det-b" data-day="21">
+            <div class="recs" data-day="21"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det22">
+          <div class="det-b" data-day="22">
+            <div class="recs" data-day="22"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det23">
+          <div class="det-b" data-day="23">
+            <div class="recs" data-day="23"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det24">
+          <div class="det-b" data-day="24">
+            <div class="recs" data-day="24"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det25">
+          <div class="det-b" data-day="25">
+            <div class="recs" data-day="25"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det26">
+          <div class="det-b" data-day="26">
+            <div class="recs" data-day="26"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det27">
+          <div class="det-b" data-day="27">
+            <div class="recs" data-day="27"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det28">
+          <div class="det-b" data-day="28">
+            <div class="recs" data-day="28"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det29">
+          <div class="det-b" data-day="29">
+            <div class="recs" data-day="29"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        <div class="det" id="det30">
+          <div class="det-b" data-day="30">
+            <div class="recs" data-day="30"></div>
+            <p class="empty">아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>
+            <p class="qk-note">📷 사진 올리기·삭제는 <b>Safari</b>에서 열어야 작동해요</p>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <div class="card" id="sumCard">
+        <h2>📊 지금까지 비운 물건<small class="s">시작 2026.11.17 (화)</small></h2>
+        <div class="sumrow">
+          <div class="sum-big"><b id="sumN">1</b><span>개</span></div>
+          <div class="sum-txt"><span id="sumDays">1일째 · 하루 1개씩 쌓이는 중</span>
+            <em>사진 올릴 때마다 자동으로 세어 드려요</em>
+          </div>
+        </div>
+        <div id="recList">
+          <div class="rec"><span class="rt">11/17 23:30</span><span class="rn">TV 리모컨 1개 · 사진 인증</span><button type="button" class="del js-only" data-del="seed-r17">삭제</button></div>
+        </div>
+        <p class="note" id="sumNote">2월까지 100개가 목표예요. 오늘 1개 시작했어요.</p>
+      </div>
+
+      <div class="card rule">
+        <h2>⚡ 2초 판단 룰</h2>
+        <p class="q">① 1년 안 씀 <i>·</i> ② 고장 났거나 짝 없음 <i>·</i> ③ 2월 이사에 가져갈 건가?</p>
+        <p class="q-ans">셋 중 <b>하나라도</b> 걸리면 → 고민 없이 바로 빼기</p>
+        <p class="tip">오늘 다 못 해도 괜찮아요. 체크한 칸까지가 오늘 한 일이에요.</p>
+      </div>
+
+      <div class="pbox prog-wrap">
+        <div class="prow">
+          <span class="ptxt">오늘 비운 것 <b class="prog-n">0 / 0</b></span>
+          <span class="ptxt prog-pct">0%</span>
+        </div>
+        <div class="prog"><i></i></div>
+      </div>
+
+      <div class="sec">
+        <input type="checkbox" id="s1" class="fold" checked>
+        <label class="sec-h" for="s1">
+          <span class="sec-n">1</span>
+          <span class="sec-t">큰 짐 · 가전</span>
+          <span class="cnt">0/6</span>
+          <span class="chev">▼</span>
+        </label>
+        <div class="sec-b">
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">안 쓰는 소형가전 1개<em>에어프라이어·믹서기·토스터 중 1년 안 쓴 것</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">빈 박스·쇼핑백 뭉치 버리기<em>한 번에 10장씩, 현관 옆부터</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">깨졌거나 뚜껑 잃은 수납함<em>버리면 그 안에 있던 것도 같이 정리</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">안 쓰는 운동기구 1개<em>둘째 것부터 아이에게 먼저 물어보기</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">베란다·현관 큰 짐 1개<em>유모차·유아 자전거·김장통 등</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">이사에 안 가져갈 가구 1개 정하기<em>정한 것엔 스티커 붙여 두기</em></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="sec">
+        <input type="checkbox" id="s2" class="fold" checked>
+        <label class="sec-h" for="s2">
+          <span class="sec-n">2</span>
+          <span class="sec-t">옷장 · 신발장</span>
+          <span class="cnt">0/6</span>
+          <span class="chev">▼</span>
+        </label>
+        <div class="sec-b">
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">1년 안 입은 옷 절반 빼기<em>옷장 오른쪽 절반부터 통째로</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">늘어난 홈웨어 정리<em>한 사람당 2벌만 남기기</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">안 신는 신발 내놓기<em>1년 기준, 짝 맞는 것만 남김</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">짝 없는 양말·속옷 전부 버리기<em>서랍 하나 통째로 비우는 기분</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">큰아이·둘째 작아진 옷 30분 정리<em>아이와 같이 보면서 결정</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">겨울 외투 여분 1벌 정리<em>입지 않는 패딩·코트</em></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="sec">
+        <input type="checkbox" id="s3" class="fold" checked>
+        <label class="sec-h" for="s3">
+          <span class="sec-n">3</span>
+          <span class="sec-t">주방 · 냉장고</span>
+          <span class="cnt">0/6</span>
+          <span class="chev">▼</span>
+        </label>
+        <div class="sec-b">
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">뚜껑 없는 · 색 배인 반찬통 버리기<em>이것만 해도 찬장 반이 비어요</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">안 쓰는 컵·머그 정리<em>같은 것 4개만 남기기</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">냉동실 화석 버리기<em>라벨 없는 지퍼백은 전부</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">유통기한 지난 소스·양념<em>열어서 냄새 확인하고 바로</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">아이 간식 창고 반 비우기<em>먼저 먹을 것만 앞줄로</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">수저·조리도구 중복 1묶음<em>안 쓰는 것만 골라 빼기</em></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="sec">
+        <input type="checkbox" id="s4" class="fold" checked>
+        <label class="sec-h" for="s4">
+          <span class="sec-n">4</span>
+          <span class="sec-t">거실 · 아이들 방</span>
+          <span class="cnt">0/6</span>
+          <span class="chev">▼</span>
+        </label>
+        <div class="sec-b">
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">거실에 나온 아이들 물건 → 바구니 1개 룰<em>큰아이·둘째 각자 바구니 하나, 방으로</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">지난 학기 문제집·교과서 정리<em>기말 끝난 뒤 바로 버리는 게 제일 쉬움</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">유통기한 지난 약·샘플 버리기<em>욕실 수납장까지 같이</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">깨진 장난감·퍼즐 조각<em>맞출 수 없는 건 미련 없이</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">안 읽는 책 10권 빼기<em>도서관 기증이나 중고로</em></span>
+          </label>
+          <label class="item-row">
+            <input type="checkbox" class="item">
+            <span class="box"></span>
+            <span class="txt">잡동사니 서랍 1칸 통째로 비우기<em>가장 빨리 효과 보는 칸</em></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card only-js">
+        <h2>➕ 직접 추가<small class="s">여기 적은 건 폰에 저장돼요</small></h2>
+        <div class="sec" style="border:0;margin:0">
+          <div id="extraList"></div>
+        </div>
+        <form class="add" id="addForm" autocomplete="off">
+          <input type="text" id="addInput" placeholder="버릴 것 적어 넣기" enterkeyhint="done">
+          <button type="submit">추가</button>
+        </form>
+        <div class="btnrow">
+          <button type="button" class="reset" id="resetBtn">오늘 체크 초기화</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TAB 2 ============ -->
+    <section class="panel" id="p2">
+      <p class="lead">이번 주(11/16 월 ~ 11/21 토) · 4인 반상 기준</p>
+
+      <div class="pbox prog-wrap">
+        <div class="prow">
+          <span class="ptxt">장보기 체크 <b class="prog-n">0 / 0</b></span>
+          <span class="ptxt prog-pct">0%</span>
+        </div>
+        <div class="prog"><i></i></div>
+      </div>
+
+      <div class="day">
+        <div class="day-h"><span class="d">월</span>11/16</div>
+        <div class="rows">
+          <div class="row"><span class="k">밥·국</span><span class="v">흰쌀밥 · 소고기무국</span></div>
+          <div class="row"><span class="k">메인</span><span class="v">제육볶음<i class="h">집</i></span></div>
+          <div class="row"><span class="k">채소·쌈</span><span class="v">로메인 · 겨자잎 쌈<i class="h">집</i></span></div>
+          <div class="row"><span class="k">반찬</span><span class="v">손두부구이<i class="h">집</i> · 고사리나물</span></div>
+          <div class="row"><span class="k">절임·김치</span><span class="v">멸치볶음 · 김치<i class="h">집</i></span></div>
+          <div class="row"><span class="k">후식</span><span class="v">배<i class="h">집</i></span></div>
+        </div>
+      </div>
+
+      <div class="day today">
+        <div class="day-h"><span class="d">화</span>11/17<span class="b">오늘</span></div>
+        <div class="rows">
+          <div class="row"><span class="k">밥·국</span><span class="v">흰쌀밥 · 꽃게미역국</span></div>
+          <div class="row"><span class="k">메인</span><span class="v">삼겹살구이<i class="h">집</i></span></div>
+          <div class="row"><span class="k">채소·쌈</span><span class="v">로메인 · 겨자잎 겉절이<i class="h">집</i></span></div>
+          <div class="row"><span class="k">반찬</span><span class="v">계란말이<i class="h">집</i> · 오이무침</span></div>
+          <div class="row"><span class="k">절임·김치</span><span class="v">진미채볶음 · 김치<i class="h">집</i></span></div>
+          <div class="row"><span class="k">후식</span><span class="v">귤<i class="h">집</i></span></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-h"><span class="d">수</span>11/18</div>
+        <div class="rows">
+          <div class="row"><span class="k">밥·국</span><span class="v">흰쌀밥 · 두부된장국<i class="h">집</i></span></div>
+          <div class="row"><span class="k">메인</span><span class="v">훈제오리구이</span></div>
+          <div class="row"><span class="k">채소·쌈</span><span class="v">콩자반</span></div>
+          <div class="row"><span class="k">반찬</span><span class="v">콩나물무침 · 조미김</span></div>
+          <div class="row"><span class="k">김치</span><span class="v">김치<i class="h">집</i></span></div>
+          <div class="row"><span class="k">후식</span><span class="v">사과<i class="h">집</i></span></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-h"><span class="d">목</span>11/19</div>
+        <div class="rows">
+          <div class="row"><span class="k">밥·국</span><span class="v">흰쌀밥 · 황태북엇국<i class="h">집</i></span></div>
+          <div class="row"><span class="k">메인</span><span class="v">소불고기</span></div>
+          <div class="row"><span class="k">채소·쌈</span><span class="v">로메인 · 겨자잎 샐러드<i class="h">집</i></span></div>
+          <div class="row"><span class="k">반찬</span><span class="v">감자채볶음 · 메추리알장조림</span></div>
+          <div class="row"><span class="k">김치</span><span class="v">김치<i class="h">집</i></span></div>
+          <div class="row"><span class="k">후식</span><span class="v">배<i class="h">집</i></span></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-h"><span class="d">금</span>11/20</div>
+        <div class="rows">
+          <div class="row"><span class="k">밥·국</span><span class="v">흰쌀밥 · 돼지감자찌개<i class="h">집</i></span></div>
+          <div class="row"><span class="k">메인</span><span class="v">순살고등어구이</span></div>
+          <div class="row"><span class="k">반찬</span><span class="v">쪽파계란찜<i class="h">집</i> · 어묵볶음</span></div>
+          <div class="row"><span class="k">절임·김치</span><span class="v">깻잎장아찌 · 조미김</span></div>
+          <div class="row"><span class="k">후식</span><span class="v">귤<i class="h">집</i></span></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-h"><span class="d">토</span>11/21</div>
+        <div class="rows">
+          <div class="row"><span class="k">밥·국</span><span class="v">흰쌀밥 · 소고기미역국</span></div>
+          <div class="row"><span class="k">메인</span><span class="v">간장찜닭</span></div>
+          <div class="row"><span class="k">반찬</span><span class="v">잡채 (버섯 제외)</span></div>
+          <div class="row"><span class="k">채소·김치</span><span class="v">로메인 · 겨자잎 쌈 · 김치<i class="h">집</i></span></div>
+          <div class="row"><span class="k">디저트</span><span class="v">큰아이 티라미수 + 사과<i class="h">집</i></span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🧺 집에 있는 재료<small class="s">이건 안 사도 돼요</small></h2>
+        <div class="chips">
+          <span class="chip">계란</span><span class="chip">손두부</span><span class="chip">김치</span>
+          <span class="chip">쪽파</span><span class="chip">삼겹살</span><span class="chip">제육용 돼지고기</span>
+          <span class="chip">로메인</span><span class="chip">겨자잎</span><span class="chip">배</span>
+          <span class="chip">사과</span><span class="chip">귤</span>
+        </div>
+        <p class="note">제외 재료: 연근 · 버섯 · 파채 · 시금치나물 · 토요일 육전 (고사리나물은 넣었어요)</p>
+      </div>
+
+      <div class="card">
+        <h2>🛒 이번 주 장보기 바구니<small class="s">결제 전 상태예요</small></h2>
+        <div class="warn">담긴 것 <b>24개</b> (전에 담아 둔 6종 + 식단 재료 18종)</div>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">전에 담은 2종 남길지 뺄지 정하기<em>지난번에 직접 뺀 건지 확인이 안 됐어요</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">티라미수 가격·재고 확인<em>재고가 적으면 대체품도 볼 것</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">찜닭 → 순살로 변경</span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">요거트·육개장 기존 6종 그대로 두기</span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">총액 확인하고 결제 누르기<em>무료배송 기준은 이미 넘겼어요</em></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- ============ TAB 3 ============ -->
+    <section class="panel" id="p3">
+      <p class="lead">내일(11/18 수) 출근 · 보육일지 · 큰아이 시험</p>
+
+      <div class="pbox prog-wrap">
+        <div class="prow">
+          <span class="ptxt">확인한 일 <b class="prog-n">0 / 0</b></span>
+          <span class="ptxt prog-pct">0%</span>
+        </div>
+        <div class="prog"><i></i></div>
+      </div>
+
+      <div class="card">
+        <h2>🌅 내일 (11/18 수)<small class="s">동료 교사 휴가 · 아침 등원차량 없음</small></h2>
+        <div class="warn"><b>9시 출근</b>이에요. 7시 반 아닙니다 — 당직은 다른 선생님이 서요.</div>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">차량 8시 공장 확인 결과 받았는지<em>어제 입고, 어디 고장인지에 따라 기간이 달라져요</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">학부모 통화 결과 단톡방에 올리기<em>6시 넘어 통화하기로 한 건 오늘 안에</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">10시 30분 생일잔치 준비<em>지난 생일 원아 확인</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">이번 주 원내 일정 챙기기<em>11/19 목 실내놀이터 · 11/20 금 도서관</em></span>
+        </label>
+      </div>
+
+      <div class="card">
+        <h2>📋 11월 2주 보육일지<small class="s">담당 학급 · 확인만 남았어요</small></h2>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">원아 출국 반영 확인<em>출석 3 / 결석 1 · 사유 '출국'</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">안전교육 실제 진행 여부 확인<em>계획안 주제 '(실종·유괴) 큰소리로 도움을 청해요'</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">11/12 뮤지컬 버스 · 11/13 통학로 공사 반영분 확인<em>알림장에 안전교육 기록이 없어 계획안에 맞춰 넣은 부분</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">4페이지 출결 표 숫자 칸 글꼴 안 깨졌는지 확인</span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">최종 파일 열어서 저장본 확인<em>파일명·날짜 확인</em></span>
+        </label>
+      </div>
+
+      <div class="card">
+        <h2>📚 큰아이 학교 일정<small class="s">기말고사 기간 · 내일이 마지막 날</small></h2>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">사회 예상문제 50제 풀렸는지 확인<em>Ⅸ단원 20 + Ⅹ단원 20 + Ⅷ 후반 10, 해설까지 있어요</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">내일 남은 과목 챙기기<em>전 과목 객관식이에요</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">11/19(목)은 수능일 재량휴업<em>아이는 학교 안 가요</em></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- ============ TAB 4 ============ -->
+    <section class="panel" id="p4">
+      <p class="lead">전세 체크 · 새 일 준비 · 이사 준비</p>
+
+      <div class="pbox prog-wrap">
+        <div class="prow">
+          <span class="ptxt">확인한 일 <b class="prog-n">0 / 0</b></span>
+          <span class="ptxt prog-pct">0%</span>
+        </div>
+        <div class="prog"><i></i></div>
+      </div>
+
+      <div class="card">
+        <h2>🏢 지금 집 전세 체크<small class="s">가격 조정 시점까지 기다리는 중</small></h2>
+        <div class="kv"><span class="k">내놓은 곳</span><span class="v">한 곳만 유지 (복수 등록 안 함)</span></div>
+        <div class="kv"><span class="k">비교 기준</span><span class="v">같은 단지 · 비슷한 층 최근 거래 <b>3건</b></span></div>
+        <div class="kv"><span class="k">막히는 이유</span><span class="v">전세가율이 높으면 세입자 대출·보증보험 심사에서 걸려요. <b>한 단계 내리면</b> 여지가 생깁니다</span></div>
+        <div class="warn">결정: <b>중개사 1곳 유지</b> → 정한 날까지 대기 → 소식 없으면 <b>다음 달 초에 가격 조정</b></div>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">정한 날까지 기다리기<em>중개사 '걱정 말라'는 말은 기다리라는 뜻이에요</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">문의 온 손님 응대 기준 정하기</span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">가격 조정 실행<em>한 단계 내려 최저가 되기</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">세입자 도장 받는 마지막 기한 정하기<em>입주일에서 역산해 두기</em></span>
+        </label>
+        <p class="note">방어선: 최저가 기준으로 잔금 계산을 미리 해 두기 — 넘기는지 미리 확인.</p>
+      </div>
+
+      <div class="card">
+        <h2>🌱 새 일 준비<small class="s">계약금만 낸 상태 · 조건 확인 중</small></h2>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">이름 변경 가능 여부·시점 서면으로 확인</span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">반편성 확정<em>방 5개 기준, 한 방에 몇 명까지인지</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">그림책 레지오 운영 방침 — 원장·교사 동의</span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">교사 승계 · 임대 조건 · 권리금 서면 확인</span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">잔금 일정 정리<em>세입자 입주일 전까지</em></span>
+        </label>
+      </div>
+
+      <div class="card">
+        <h2>📦 이사 로드맵<small class="s">살림 반 줄인 상태로 나가기</small></h2>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">새 집 월세 조건 확정<em>면적·보증금·월세 두 곳 비교</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">이사 업체 견적 2곳 받기</span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">안 가져갈 가전·가구 처분<em>정리하면서 체크한 것부터</em></span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">전입신고·주소 이전 서류 준비</span>
+        </label>
+        <label class="item-row">
+          <input type="checkbox" class="item">
+          <span class="box"></span>
+          <span class="txt">포장은 박스 30개 이하로<em>그게 '반 줄이기' 성공 기준이에요</em></span>
+        </label>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    기준 <b>2026.11.17(화) 밤</b> · 체크·사진 기록은 이 폰 브라우저에 저장돼요<br>
+    Safari에서 <b>공유 → 홈 화면에 추가</b> 하면 앱처럼 열려요<br>
+    퀵룩에서는 탭·체크만 돼요 · 사진 올리기·삭제는 Safari에서 열어 주세요
+  </footer>
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  try { root.className += " js-on"; } catch (e) {}
+
+  var KEY = "biumlog-checks-v1";
+  var store = { items: {}, extra: [], tab: "" };
+  var canStore = false;
+
+  /* 저장소 확인 (막혀 있어도 화면은 그대로 동작) */
+  try {
+    window.localStorage.setItem("__probe", "1");
+    window.localStorage.removeItem("__probe");
+    canStore = true;
+    var raw = window.localStorage.getItem(KEY);
+    if (raw) {
+      var p = JSON.parse(raw);
+      if (p && typeof p === "object") {
+        store.items = p.items || {};
+        store.extra = p.extra || [];
+        store.tab = p.tab || "";
+      }
+    }
+  } catch (e) { canStore = false; }
+
+  function save() {
+    if (!canStore) return;
+    try { window.localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
+  }
+
+  function rowLabel(inp) {
+    var n = inp.parentNode;
+    if (n && n.querySelector) {
+      var t = n.querySelector(".txt");
+      if (t) return (t.textContent || "").replace(/\s+/g, " ").trim();
+    }
+    return "";
+  }
+
+  function keyOf(inp) {
+    return "i|" + rowLabel(inp).slice(0, 80);
+  }
+
+  function each(list, fn) {
+    for (var i = 0; i < list.length; i++) fn(list[i], i);
+  }
+
+  function update() {
+    try {
+      each(document.querySelectorAll(".panel"), function (panel) {
+        var all = panel.querySelectorAll("input.item");
+        var done = 0;
+        each(all, function (el) { if (el.checked) done++; });
+        var total = all.length;
+        var pct = total ? Math.round((done / total) * 100) : 0;
+        var n = panel.querySelector(".prog-n");
+        var pc = panel.querySelector(".prog-pct");
+        var bar = panel.querySelector(".prog i");
+        if (n) n.textContent = done + " / " + total;
+        if (pc) pc.textContent = pct + "%";
+        if (bar) bar.style.width = pct + "%";
+
+        each(panel.querySelectorAll(".sec"), function (sec) {
+          var its = sec.querySelectorAll("input.item");
+          var d = 0;
+          each(its, function (el) { if (el.checked) d++; });
+          var c = sec.querySelector(".cnt");
+          if (c && !sec.classList.contains("js-plain")) c.textContent = d + "/" + its.length;
+        });
+      });
+    } catch (e) {}
+  }
+
+  /* 체크 상태 복원 */
+  try {
+    each(document.querySelectorAll("input.item"), function (el) {
+      if (store.items[keyOf(el)]) el.checked = true;
+    });
+  } catch (e) {}
+
+  /* 직접 추가한 항목 그리기 */
+  function makeRow(text) {
+    var lab = document.createElement("label");
+    lab.className = "item-row";
+    var inp = document.createElement("input");
+    inp.type = "checkbox";
+    inp.className = "item";
+    var box = document.createElement("span");
+    box.className = "box";
+    var txt = document.createElement("span");
+    txt.className = "txt";
+    txt.textContent = text;
+    lab.appendChild(inp);
+    lab.appendChild(box);
+    lab.appendChild(txt);
+    return lab;
+  }
+
+  var extraList = document.getElementById("extraList");
+  if (extraList) {
+    try {
+      each(store.extra, function (t) {
+        if (typeof t === "string" && t) extraList.appendChild(makeRow(t));
+      });
+      each(extraList.querySelectorAll("input.item"), function (el) {
+        if (store.items[keyOf(el)]) el.checked = true;
+      });
+    } catch (e) {}
+  }
+
+  /* 마지막에 보던 탭 기억 */
+  try {
+    if (store.tab) {
+      var tb = document.getElementById(store.tab);
+      if (tb) tb.checked = true;
+    }
+  } catch (e) {}
+
+  /* 변경 감지 → 저장 + 진행률 */
+  try {
+    document.addEventListener("change", function (ev) {
+      var t = ev.target;
+      if (!t || !t.className || typeof t.className !== "string") return;
+      if (t.className.indexOf("tabr") >= 0) {
+        store.tab = t.id;
+        save();
+        return;
+      }
+      if (t.className.indexOf("item") >= 0) {
+        store.items[keyOf(t)] = !!t.checked;
+        save();
+        update();
+      }
+    });
+  } catch (e) {}
+
+  /* 항목 추가 */
+  var form = document.getElementById("addForm");
+  if (form) {
+    try {
+      form.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        var input = document.getElementById("addInput");
+        if (!input) return;
+        var v = (input.value || "").replace(/\s+/g, " ").trim();
+        if (!v) return;
+        var row = makeRow(v);
+        extraList.appendChild(row);
+        store.extra.push(v);
+        save();
+        input.value = "";
+        update();
+      });
+    } catch (e) {}
+  }
+
+  /* 초기화 */
+  var resetBtn = document.getElementById("resetBtn");
+  if (resetBtn) {
+    try {
+      resetBtn.addEventListener("click", function () {
+        var ok = true;
+        try { ok = window.confirm("오늘 체크한 것을 모두 풀까요? (적어 넣은 항목은 남아요)"); } catch (e) { ok = true; }
+        if (!ok) return;
+        each(document.querySelectorAll("input.item"), function (el) { el.checked = false; });
+        store.items = {};
+        save();
+        update();
+      });
+    } catch (e) {}
+  }
+
+  update();
+})();
+</script>
+
+<script>
+/* ===== 비움로그: 날짜별 사진·기록 올리기 / 삭제 ===== */
+(function () {
+  var root = document.documentElement;
+  try { if (root.className.indexOf("js-on") < 0) root.className += " js-on"; } catch (e) {}
+
+  var YEAR = 2026, MONTH = 10, DAYS = 30;          /* 2026년 11월 (MONTH는 0부터) */
+  var MONTH_TXT = "11월";
+  var DB_NAME = "biumlog-db", STORE_NAME = "records", LS_KEY = "biumlog-records-v1";
+  var SEED_ID = "seed-r17";
+  var SEED = { id: SEED_ID, day: 17, item: "TV 리모컨", qty: 1, time: "23:30",
+               ts: "2026-11-17T23:30:00+09:00", photo: "", seed: true };
+
+  var db = null, lsOnly = false;
+  var map = {};                                     /* id -> 기록(삭제 표시 포함) */
+
+  /* ---------- 작은 도구 ---------- */
+  function qs(sel, ctx) {
+    try { return (ctx || document).querySelector(sel); } catch (e) { return null; }
+  }
+  function qsa(sel, ctx) {
+    var out = [], list, i;
+    try { list = (ctx || document).querySelectorAll(sel); } catch (e) { return out; }
+    for (i = 0; i < list.length; i++) out.push(list[i]);
+    return out;
+  }
+  function pad2(n) { return (n < 10 ? "0" : "") + n; }
+  function parentByClass(el, cls) {
+    var n = el ? el.parentNode : null;
+    while (n && n.nodeType === 1) {
+      if (String(n.className || "").indexOf(cls) >= 0) return n;
+      n = n.parentNode;
+    }
+    return null;
+  }
+  function byAttr(el, attr) {
+    var n = el;
+    while (n && n !== document) {
+      if (n.nodeType === 1 && n.getAttribute && n.getAttribute(attr) !== null) return n;
+      n = n.parentNode;
+    }
+    return null;
+  }
+  function hasClass(el, cls) {
+    return !!(el && String(el.className || "").indexOf(cls) >= 0);
+  }
+  function setClass(el, cls, on) {
+    if (!el) return;
+    try {
+      if (el.classList) { if (on) el.classList.add(cls); else el.classList.remove(cls); return; }
+    } catch (e) {}
+    var cur = String(el.className || "");
+    var has = cur.indexOf(cls) >= 0;
+    if (on && !has) el.className = (cur ? cur + " " : "") + cls;
+    if (!on && has) el.className = cur.replace(cls, "").replace(/\s+/g, " ").replace(/^ | $/g, "");
+  }
+  function esc(s) {
+    return String(s === null || s === undefined ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function weekdayKo(day) {
+    try { return ["일", "월", "화", "수", "목", "금", "토"][new Date(YEAR, MONTH, day).getDay()] || ""; }
+    catch (e) { return ""; }
+  }
+  function todayDay() {
+    var d = new Date();
+    if (d.getFullYear() === YEAR && d.getMonth() === MONTH) return d.getDate();
+    return 17;
+  }
+
+  /* ---------- 저장 (IndexedDB → 막히면 localStorage) ---------- */
+  function openStore(cb) {
+    var called = false;
+    function done() { if (called) return; called = true; cb(); }
+    try {
+      if (!window.indexedDB) { lsOnly = true; done(); return; }
+      var req = window.indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function (ev) {
+        var d = ev.target.result, has = false;
+        try { has = d.objectStoreNames.contains(STORE_NAME); } catch (e) { has = false; }
+        if (!has) { try { d.createObjectStore(STORE_NAME, { keyPath: "id" }); } catch (e) {} }
+      };
+      req.onsuccess = function (ev) {
+        db = ev.target.result;
+        try {
+          db.onversionchange = function () {
+            try { db.close(); } catch (e) {}
+            db = null; lsOnly = true;
+          };
+        } catch (e) {}
+        done();
+      };
+      req.onerror = function () { lsOnly = true; done(); };
+      req.onblocked = function () { lsOnly = true; done(); };
+    } catch (e) { lsOnly = true; done(); }
+  }
+
+  function readLS(cb) {
+    var out = [], raw, obj, k;
+    try {
+      raw = window.localStorage.getItem(LS_KEY);
+      if (raw) {
+        obj = JSON.parse(raw);
+        if (obj && typeof obj === "object") {
+          for (k in obj) { if (Object.prototype.hasOwnProperty.call(obj, k)) out.push(obj[k]); }
+        }
+      }
+    } catch (e) {}
+    cb(out);
+  }
+
+  function loadAll(cb) {
+    if (!db || lsOnly) { readLS(cb); return; }
+    var out = [];
+    try {
+      var tx = db.transaction(STORE_NAME, "readonly");
+      var rq = tx.objectStore(STORE_NAME).openCursor();
+      rq.onsuccess = function (ev) {
+        var cur = ev.target.result;
+        if (cur) { out.push(cur.value); try { cur.continue(); } catch (e) {} }
+        else cb(out);
+      };
+      rq.onerror = function () { lsOnly = true; readLS(cb); };
+    } catch (e) { lsOnly = true; readLS(cb); }
+  }
+
+  function writeLS(rec) {
+    try {
+      var raw = window.localStorage.getItem(LS_KEY);
+      var obj = raw ? JSON.parse(raw) : {};
+      if (!obj || typeof obj !== "object") obj = {};
+      obj[rec.id] = rec;
+      window.localStorage.setItem(LS_KEY, JSON.stringify(obj));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function save(rec, cb) {
+    if (db && !lsOnly) {
+      try {
+        var tx = db.transaction(STORE_NAME, "readwrite");
+        tx.objectStore(STORE_NAME).put(rec);
+        tx.oncomplete = function () { cb(true); };
+        tx.onerror = function () { cb(writeLS(rec)); };
+        tx.onabort = function () { cb(writeLS(rec)); };
+        return;
+      } catch (e) { lsOnly = true; }
+    }
+    cb(writeLS(rec));
+  }
+
+  /* ---------- 데이터 ---------- */
+  function isActive(r) { return !!r && !r.deleted && r.day >= 1 && r.day <= DAYS; }
+  function dayList(day) {
+    var out = [], k;
+    for (k in map) {
+      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
+      if (isActive(map[k]) && map[k].day === day) out.push(map[k]);
+    }
+    out.sort(function (a, b) { return a.ts < b.ts ? -1 : (a.ts > b.ts ? 1 : 0); });
+    return out;
+  }
+  function seedGone() { return !!(map[SEED_ID] && map[SEED_ID].deleted); }
+  function activeList() {
+    var out = [], k;
+    for (k in map) {
+      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
+      if (isActive(map[k])) out.push(map[k]);
+    }
+    if (!seedGone()) out.push(SEED);
+    out.sort(function (a, b) { return a.ts < b.ts ? 1 : (a.ts > b.ts ? -1 : 0); });
+    return out;
+  }
+  function qtySum(list) {
+    var s = 0, i;
+    for (i = 0; i < list.length; i++) s += (parseInt(list[i].qty, 10) || 1);
+    return s;
+  }
+  function dayQty(day) {
+    var q = qtySum(dayList(day));
+    if (day === 17 && !seedGone()) q += (parseInt(SEED.qty, 10) || 1);
+    return q;
+  }
+
+  /* ---------- 그리기 ---------- */
+  function recCard(r) {
+    var q = parseInt(r.qty, 10) || 1;
+    var h = '<div class="rec-item" data-rec="' + esc(r.id) + '">';
+    h += '<div class="det-h"><span class="dt">' + MONTH_TXT + " " + r.day + "일 (" + weekdayKo(r.day) + ')</span>';
+    h += '<span class="db">' + q + '개 비움</span>';
+    h += '<button type="button" class="del" data-del="' + esc(r.id) + '">삭제</button></div>';
+    if (r.photo) h += '<img class="ph" src="' + r.photo + '" alt="' + MONTH_TXT + " " + r.day + '일 비운 물건 사진">';
+    h += '<div class="kv2"><span class="k">품목</span><span class="v">' + esc(r.item) + '</span></div>';
+    h += '<div class="kv2"><span class="k">개수</span><span class="v">' + q + '개</span></div>';
+    h += '<div class="kv2"><span class="k">시각</span><span class="v">' + esc(r.time) + '</span></div>';
+    h += '</div>';
+    return h;
+  }
+
+  function renderDays() {
+    var day, i, box, det, list, h, empty;
+    for (day = 1; day <= DAYS; day++) {
+      box = qs('.recs[data-day="' + day + '"]');
+      if (!box) continue;
+      list = dayList(day);
+      h = "";
+      for (i = 0; i < list.length; i++) h += recCard(list[i]);
+      box.innerHTML = h;
+      det = parentByClass(box, "det-b");
+      empty = det ? qs(".empty", det) : null;
+      if (empty) empty.style.display = dayQty(day) ? "none" : "block";
+    }
+    var seedBox = document.getElementById("seedRec");
+    if (seedBox) {
+      seedBox.style.display = seedGone() ? "none" : "block";
+      if (!seedGone() && !qs('[data-del="' + SEED_ID + '"]', seedBox)) {
+        var dh = qs(".det-h", seedBox);
+        if (dh) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "del";
+          b.setAttribute("data-del", SEED_ID);
+          b.textContent = "삭제";
+          dh.appendChild(b);
+        }
+      }
+    }
+  }
+
+  function renderCalendar() {
+    var day, lab, b, q;
+    for (day = 1; day <= DAYS; day++) {
+      lab = qs('.grid label[for="cd' + day + '"]');
+      if (!lab) continue;
+      q = dayQty(day);
+      b = qs(".b", lab);
+      if (q > 0) {
+        setClass(lab, "has", true);
+        if (!b) {
+          b = document.createElement("span");
+          b.className = "b";
+          lab.appendChild(b);
+        }
+        b.style.display = "";
+        b.textContent = String(q);
+        lab.setAttribute("aria-label", MONTH_TXT + " " + day + "일 " + q + "개");
+      } else {
+        setClass(lab, "has", false);
+        if (b) { b.textContent = ""; b.style.display = "none"; }
+        lab.setAttribute("aria-label", MONTH_TXT + " " + day + "일 기록 없음");
+      }
+    }
+  }
+
+  function renderTotals() {
+    var list = activeList();
+    var total = qtySum(list);
+    var tot = document.getElementById("totBadge");
+    if (tot) tot.textContent = "누적 " + total + "개";
+    var sumN = document.getElementById("sumN");
+    if (sumN) sumN.textContent = String(total);
+    var seen = {}, days = 0, i;
+    for (i = 0; i < list.length; i++) {
+      if (!seen[list[i].day]) { seen[list[i].day] = 1; days++; }
+    }
+    var sumDays = document.getElementById("sumDays");
+    if (sumDays) sumDays.textContent = (days || 1) + "일째 · 하루 1개씩 쌓이는 중";
+    var note = document.getElementById("sumNote");
+    if (note) {
+      var t = dayQty(todayDay());
+      note.textContent = "2월까지 100개가 목표예요. " +
+        (t ? "오늘 " + t + "개 비웠어요." : "오늘은 아직 0개예요. 하나만 비워 볼까요?");
+    }
+  }
+
+  function renderRecList() {
+    var box = document.getElementById("recList");
+    if (!box) return;
+    var list = activeList(), h = "", i, r, q;
+    if (!list.length) {
+      box.innerHTML = '<p class="empty">아직 기록이 없어요.<br>날짜를 누르고 <b>사진·기록</b>을 올리면<br>여기에 한 줄씩 쌓여요.</p>';
+      return;
+    }
+    for (i = 0; i < list.length; i++) {
+      r = list[i];
+      q = parseInt(r.qty, 10) || 1;
+      h += '<div class="rec" data-rec="' + esc(r.id) + '">';
+      h += '<span class="rt">11/' + r.day + " " + esc(r.time) + '</span>';
+      h += '<span class="rn">' + esc(r.item) + " " + q + "개 · " + ((r.photo || r.seed) ? "사진 인증" : "사진 없음") + '</span>';
+      h += '<button type="button" class="del" data-del="' + esc(r.id) + '">삭제</button></div>';
+    }
+    box.innerHTML = h;
+  }
+
+  function render() {
+    try { renderDays(); renderCalendar(); renderTotals(); renderRecList(); } catch (e) {}
+  }
+
+  /* ---------- 안내 토스트 ---------- */
+  var toastEl = null, toastTimer = 0;
+  function flash(text) {
+    try {
+      if (!toastEl) {
+        toastEl = document.createElement("div");
+        toastEl.className = "toast";
+        (document.body || document.documentElement).appendChild(toastEl);
+      }
+      toastEl.textContent = text;
+      toastEl.style.display = "block";
+      if (toastTimer) { window.clearTimeout(toastTimer); toastTimer = 0; }
+      toastTimer = window.setTimeout(function () { try { toastEl.style.display = "none"; } catch (e) {} }, 2300);
+    } catch (e) {}
+  }
+
+  /* ---------- 날짜별 [+ 사진·기록 올리기] UI 만들기 ---------- */
+  function buildAddUI() {
+    var day, box, det, wrap, btn, form, uid;
+    for (day = 1; day <= DAYS; day++) {
+      box = qs('.recs[data-day="' + day + '"]');
+      if (!box) continue;
+      det = parentByClass(box, "det-b");
+      if (!det || qs(".addwrap", det)) continue;
+      uid = "d" + day;
+
+      wrap = document.createElement("div");
+      wrap.className = "addwrap";
+
+      btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "openAdd";
+      btn.setAttribute("aria-expanded", "false");
+      btn.setAttribute("data-open", String(day));
+      btn.textContent = "＋ 사진·기록 올리기";
+
+      form = document.createElement("form");
+      form.className = "addbox";
+      form.hidden = true;
+      form.setAttribute("data-day", String(day));
+      form.setAttribute("autocomplete", "off");
+      form.innerHTML =
+        '<label class="filepick" for="file-' + uid + '">' +
+          '<span class="fpick">📷 사진 선택</span>' +
+          '<span class="fname">선택 안 함</span>' +
+          '<input type="file" id="file-' + uid + '" class="phfile" accept="image/*">' +
+        '</label>' +
+        '<div class="addrow">' +
+          '<input type="text" id="item-' + uid + '" class="phname" maxlength="40" placeholder="품목명 (예: 안 쓰는 믹서기)">' +
+          '<span class="qtylab">개수</span>' +
+          '<input type="number" id="qty-' + uid + '" class="phqty" min="1" max="99" step="1" value="1" inputmode="numeric" aria-label="개수">' +
+        '</div>' +
+        '<div class="submitrow"><button type="submit" class="submitbtn">올리기</button></div>' +
+        '<p class="addmsg" role="status"></p>';
+
+      wrap.appendChild(btn);
+      wrap.appendChild(form);
+      det.appendChild(wrap);
+    }
+  }
+
+  function openForm(btn) {
+    var wrap = btn.parentNode;
+    var form = wrap ? qs(".addbox", wrap) : null;
+    if (!form) return;
+    var opening = !!form.hidden;
+    form.hidden = !opening;
+    btn.setAttribute("aria-expanded", opening ? "true" : "false");
+    if (opening) {
+      var inp = qs(".phname", form);
+      if (inp) { try { inp.focus(); } catch (e) {} }
+    } else {
+      var msg = qs(".addmsg", form);
+      if (msg) { msg.textContent = ""; setClass(msg, "ok", false); }
+    }
+  }
+
+  /* ---------- 사진 줄이기 (Canvas, 최대 폭 600px JPEG 0.7) ---------- */
+  function shrinkPhoto(img) {
+    var MAX = 600;
+    var w = img.naturalWidth || img.width || 0;
+    var h = img.naturalHeight || img.height || 0;
+    if (!w || !h) return "";
+    var ratio = w > MAX ? MAX / w : 1;
+    var cw = Math.max(1, Math.round(w * ratio));
+    var ch = Math.max(1, Math.round(h * ratio));
+    var cv = document.createElement("canvas");
+    cv.width = cw;
+    cv.height = ch;
+    var ctx = cv.getContext("2d");
+    if (!ctx) return "";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, cw, ch);
+    ctx.drawImage(img, 0, 0, cw, ch);
+    var out = cv.toDataURL("image/jpeg", 0.7);
+    return (out && out.length > 64) ? out : "";
+  }
+
+  function handlePhoto(file, cb) {
+    if (!file) { cb("", ""); return; }
+    if (file.type && !/^image\//i.test(file.type)) { cb("", "read"); return; }
+    var reader;
+    try { reader = new FileReader(); } catch (e) { cb("", "read"); return; }
+    reader.onload = function () {
+      var data = "";
+      try { data = String(reader.result || ""); } catch (e) { data = ""; }
+      if (!data) { cb("", "read"); return; }
+      var img = new Image();
+      img.onload = function () {
+        var small = "";
+        try { small = shrinkPhoto(img); } catch (e) { small = ""; }
+        cb(small || data, "");
+      };
+      img.onerror = function () { cb("", "read"); };     /* HEIC 등 브라우저가 못 읽는 형식 */
+      try { img.src = data; } catch (e) { cb("", "read"); }
+    };
+    reader.onerror = function () { cb("", "read"); };
+    try { reader.readAsDataURL(file); } catch (e) { cb("", "read"); }
+  }
+
+  /* ---------- 저장 실패 시 사진만 빼고 한 번 더 ---------- */
+  function persist(rec, cb) {
+    save(rec, function (ok) {
+      if (ok) { cb(true, rec, false); return; }
+      if (rec.photo) {
+        var thin = { id: rec.id, day: rec.day, item: rec.item, qty: rec.qty,
+                     time: rec.time, ts: rec.ts, photo: "" };
+        save(thin, function (ok2) { cb(ok2, thin, true); });
+        return;
+      }
+      cb(false, rec, false);
+    });
+  }
+
+  function setMsg(el, text, ok) {
+    if (!el) return;
+    el.textContent = text || "";
+    setClass(el, "ok", !!ok);
+  }
+
+  function handleAdd(form) {
+    var day = parseInt(form.getAttribute("data-day"), 10) || todayDay();
+    var fileIn = qs(".phfile", form), nameIn = qs(".phname", form), qtyIn = qs(".phqty", form);
+    var msg = qs(".addmsg", form), submit = qs(".submitbtn", form);
+    var item = nameIn ? String(nameIn.value || "").replace(/\s+/g, " ").replace(/^ | $/g, "") : "";
+    var qty = qtyIn ? parseInt(qtyIn.value, 10) : 1;
+    if (!qty || qty < 1) qty = 1;
+    if (qty > 99) qty = 99;
+    var file = (fileIn && fileIn.files && fileIn.files.length) ? fileIn.files[0] : null;
+
+    if (!item && !file) { setMsg(msg, "품목명을 적거나 사진을 골라 주세요.", false); return; }
+    if (!item) item = "버린 물건";
+
+    if (submit) { submit.disabled = true; submit.textContent = "올리는 중…"; }
+    setMsg(msg, file ? "사진 줄이는 중…" : "저장 중…", true);
+
+    handlePhoto(file, function (photo, photoErr) {
+      var now = new Date();
+      var rec = {
+        id: "r" + now.getTime().toString(36) + Math.floor(Math.random() * 1679616).toString(36),
+        day: day,
+        item: item,
+        qty: qty,
+        time: pad2(now.getHours()) + ":" + pad2(now.getMinutes()),
+        ts: now.toISOString(),
+        photo: photo || ""
+      };
+      persist(rec, function (ok, saved, dropped) {
+        if (ok) map[saved.id] = saved;
+        render();
+        if (submit) { submit.disabled = false; submit.textContent = "올리기"; }
+        if (!ok) {
+          setMsg(msg, "저장하지 못했어요. 폰 저장 공간을 확인해 주세요.", false);
+          return;
+        }
+        if (nameIn) nameIn.value = "";
+        if (qtyIn) qtyIn.value = "1";
+        if (fileIn) {
+          try { fileIn.value = ""; } catch (e) {}
+          var pick = parentByClass(fileIn, "filepick");
+          if (pick) {
+            setClass(pick, "picked", false);
+            var fn = qs(".fname", pick);
+            if (fn) fn.textContent = "선택 안 함";
+          }
+        }
+        if (photoErr) setMsg(msg, qty + "개 기록했어요 · 사진은 못 읽어서 빼고 저장했어요", false);
+        else if (dropped) setMsg(msg, qty + "개 저장했어요 · 사진은 용량 때문에 못 넣었어요", false);
+        else setMsg(msg, qty + "개 기록했어요 ✓", true);
+        flash(day + "일 · " + qty + "개 기록했어요");
+      });
+    });
+  }
+
+  /* ---------- 삭제 ---------- */
+  function removeRecord(id) {
+    if (!id) return;
+    var src = id === SEED_ID ? SEED : map[id];
+    var now = new Date();
+    var tomb = {
+      id: id,
+      deleted: true,
+      day: src ? src.day : todayDay(),
+      item: src ? src.item : "",
+      qty: 0,
+      time: src ? src.time : "",
+      ts: now.toISOString(),
+      photo: ""
+    };
+    map[id] = tomb;          /* 화면에서 먼저 지운다 */
+    render();
+    flash("삭제했어요");
+    save(tomb, function (ok) {
+      if (!ok) flash("지웠지만 저장이 안 됐어요. 앱을 다시 열면 되살아날 수 있어요.");
+    });
+  }
+
+  /* ---------- 이벤트 ---------- */
+  try {
+    document.addEventListener("click", function (ev) {
+      var openBtn = byAttr(ev.target, "data-open");
+      if (openBtn) { openForm(openBtn); return; }
+      var delBtn = byAttr(ev.target, "data-del");
+      if (delBtn) {
+        try { ev.preventDefault(); } catch (e) {}
+        removeRecord(delBtn.getAttribute("data-del"));
+      }
+    });
+  } catch (e) {}
+
+  try {
+    document.addEventListener("submit", function (ev) {
+      var form = ev.target;
+      if (!form || !hasClass(form, "addbox")) return;
+      ev.preventDefault();
+      try { handleAdd(form); } catch (e) { flash("올리지 못했어요. 다시 해 주세요."); }
+    });
+  } catch (e) {}
+
+  try {
+    document.addEventListener("change", function (ev) {
+      var t = ev.target;
+      if (!t || !hasClass(t, "phfile")) return;
+      var pick = parentByClass(t, "filepick");
+      if (!pick) return;
+      var has = !!(t.files && t.files.length);
+      setClass(pick, "picked", has);
+      var fn = qs(".fname", pick);
+      if (fn) fn.textContent = has ? String(t.files[0].name || "사진 선택됨").slice(0, 22) : "선택 안 함";
+    });
+  } catch (e) {}
+
+  /* ---------- 시작 ---------- */
+  function boot() {
+    try { buildAddUI(); } catch (e) {}
+    openStore(function () {
+      loadAll(function (rows) {
+        var i, r;
+        for (i = 0; i < rows.length; i++) {
+          r = rows[i];
+          if (r && typeof r === "object" && typeof r.id === "string") map[r.id] = r;
+        }
+        render();
+      });
+    });
+  }
+
+  try {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+    else boot();
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
