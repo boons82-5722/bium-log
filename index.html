@@ -2122,7 +2122,7 @@
         if (w) {
           var r = w.querySelector(".row");
           if (r) r.className = t.checked ? "row on" : "row";
-          refreshDayBar(w.getAttribute("data-id"));
+          refreshDayBar(dayOfItem(itemId));
         }
         update();
       }
