@@ -251,6 +251,31 @@
   .rcancel{flex:none;width:64px;border:1px solid #ecd9c4;background:#fffaf3;color:#a4785a}
   .rempty{margin:6px 0 4px;font-size:11.5px;font-weight:600;color:#b09b86}
 
+  /* 양념·레시피: 작은 토글 칩 + 접히는 메모 카드 */
+  .rnchip{
+    flex:none;height:22px;margin:5px 3px 0 2px;padding:0 7px;
+    border:1px solid #efd9c2;border-radius:99px;background:#fdf3e7;
+    color:#c07a45;font-size:10px;font-weight:800;font-family:inherit;
+    line-height:20px;letter-spacing:-.2px;cursor:pointer;
+  }
+  .rnchip.on{border-color:#e8743b;background:#fbe1c8;color:#b4551f}
+  .rnchip:active{background:#fbe1c8}
+  .row.on .rnchip{opacity:.5}
+  .rcard{
+    margin:0 0 7px 28px;padding:6px 10px;
+    border-left:2px solid #f0cdab;border-radius:0 8px 8px 0;background:#fffaf2;
+  }
+  .rcard[hidden]{display:none}
+  .rcard p{margin:0;font-size:11.5px;line-height:1.5;color:#8a735f;font-weight:600;word-break:keep-all}
+  .rcard p + p{margin-top:3px}
+  .rcard b{color:#c25a25;font-weight:800;margin-right:4px}
+  .rnin{
+    flex:1;min-width:0;min-height:38px;padding:0 9px;border:1px solid #ecdcc8;border-radius:10px;
+    background:#fff;color:#4a3f36;font-family:inherit;font-size:16px;font-weight:700;
+  }
+  .rnin::placeholder{font-weight:600;color:#c0ab97;font-size:14px}
+  .rnin:focus{outline:0;border-color:#e8743b;box-shadow:0 0 0 3px rgba(232,116,59,.13)}
+
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 3px}
   .chip{font-size:12px;font-weight:700;color:#bd6a33;background:#fdf0e2;border-radius:99px;padding:6px 11px;line-height:1.1}
 
@@ -1705,6 +1730,92 @@
   var DAYNAME = {};
   each(DAYS, function (d) { DAYNAME[d.id] = d.label; });
 
+  /* ===== 기본 양념장·조리 메모 =====
+     메뉴 이름에 이 낱말이 들어가면 아래 비율을 보여 줘요. (어른 숟가락·컵 기준 한 줄)
+     저장된 메모(item.note)가 있으면 그게 먼저이고, 없을 때만 여기서 골라 보여 줍니다. */
+  var DEFAULT_RECIPES = {
+    "부추오이무침": "부추 한 줌·오이 1개 기준: 간장 2 · 식초 2 · 고춧가루 1.5 · 설탕 1 · 다진마늘 0.5 · 참기름 1 · 통깨 1 (먹기 직전 버무리기)",
+    "부추겉절이": "부추 한 줌·오이 1개 기준: 간장 2 · 식초 2 · 고춧가루 1.5 · 설탕 1 · 다진마늘 0.5 · 참기름 1 · 통깨 1 (먹기 직전 버무리기)",
+    "부추무침": "부추 한 줌·오이 1개 기준: 간장 2 · 식초 2 · 고춧가루 1.5 · 설탕 1 · 다진마늘 0.5 · 참기름 1 · 통깨 1 (먹기 직전 버무리기)",
+    "제육볶음": "돼지고기 600g: 고추장 2 · 고춧가루 1 · 간장 2 · 설탕 1.5 · 맛술 2 · 다진마늘 1 · 참기름 1 (양념에 20분 재워 두기)",
+    "삼겹살구이": "양념 없이 굵은소금만 · 센불에 앞뒤 노릇하게 (쌈 채소와 같이)",
+    "훈제오리구이": "기름 두르지 말고 약불에서 앞뒤 3분 · 마지막에 후추 (나온 기름은 키친타월로)",
+    "콩나물무침": "콩나물 200g: 소금 0.5 · 다진마늘 0.3 · 참기름 1 · 쪽파 1 (삶아 찬물에 헹군 뒤 마지막에 무치기)",
+    "시금치나물": "시금치 200g: 소금 0.5 · 참기름 1 · 다진마늘 0.3 · 통깨 0.5 (데친 뒤 물기 꼭 짜기)",
+    "시금치무침": "시금치 200g: 소금 0.5 · 참기름 1 · 다진마늘 0.3 · 통깨 0.5 (데친 뒤 물기 꼭 짜기)",
+    "콩자반": "검은콩 1컵: 간장 3 · 물엿 1.5 · 설탕 1 · 참기름 1 (콩 삶은 물을 조금씩 넣어 졸이기)",
+    "두부된장국": "된장 1.5 · 국물 500ml · 두부 반 모 · 쪽파 1 · 다진마늘 0.3 (된장은 체에 풀어 넣기)",
+    "육개장": "소고기 300g: 고춧가루 2 · 국간장 2 · 다진마늘 1 · 참기름 2 (고기 먼저 볶고 물 붓기)",
+    "오이초무침": "오이 2개: 식초 2 · 설탕 1.5 · 소금 0.5 · 통깨 0.5 (초는 먹기 직전에)",
+    "오이무침": "오이 2개: 고춧가루 1 · 간장 1 · 식초 1 · 설탕 0.7 · 다진마늘 0.3 · 참기름 0.5 (소금에 절여 물기 빼기)",
+    "계란말이": "계란 3개: 소금 0.3 · 맛술 0.5 · 당근·쪽파 다져 넣기 (약불에서 세 번 접기)",
+    "멸치볶음": "잔멸치 1컵: 간장 1 · 물엿 1 · 설탕 0.5 · 참기름 1 · 통깨 (마른 팬에 먼저 볶아 비린내 빼기)",
+    "진미채볶음": "진미채 150g: 고추장 1 · 고춧가루 0.5 · 물엿 2 · 참기름 1 · 마요네즈 0.5 (불 끄고 버무리기)",
+    "감자채볶음": "감자 2개: 소금 0.3 · 다진마늘 0.2 · 참기름 0.5 (채 썬 뒤 물에 헹궈 전분 빼기)",
+    "메추리알장조림": "메추리알 20개: 간장 3 · 물 1컵 · 설탕 1 · 맛술 1 · 마늘 3쪽 (중불에서 15분 졸이기)",
+    "소불고기": "소고기 500g: 간장 4 · 설탕 1.5 · 맛술 2 · 다진마늘 1 · 참기름 1 · 후추 (배즙 반 컵, 30분 재우기)",
+    "간장찜닭": "닭 1마리: 간장 5 · 물 3컵 · 설탕 1.5 · 맛술 2 · 다진마늘 1 · 생강 조금 (당면은 마지막 10분)",
+    "잡채": "간장 3 · 설탕 1.5 · 참기름 2 · 다진마늘 0.5 · 후추 (당면 삶아 참기름에 먼저 버무리기)",
+    "소고기무국": "무 200g·소고기 150g: 국간장 1.5 · 다진마늘 0.5 · 참기름 1 (고기와 무를 먼저 볶고 물 붓기)",
+    "꽃게미역국": "미역 한 줌: 국간장 2 · 다진마늘 0.5 · 참기름 1 (미역 불려 참기름에 볶은 뒤 물 붓기)",
+    "소고기미역국": "미역 한 줌·소고기 100g: 국간장 2 · 다진마늘 0.5 · 참기름 1 (미역과 고기를 먼저 볶기)",
+    "황태북엇국": "황태포 한 줌: 국간장 1.5 · 참기름 1 · 계란 1개 · 쪽파 (황태 물기 짜서 참기름에 볶기)",
+    "돼지감자찌개": "돼지감자 300g·돼지고기 200g: 고춧가루 2 · 된장 1 · 국간장 1 · 다진마늘 1 (돼지감자는 껍질 벗겨 물에 담가 두기)",
+    "순살고등어구이": "손질한 고등어: 겉면에 소금 0.5 · 후추 (센불 4분 뒤 뒤집어 노릇하게)",
+    "쪽파계란찜": "계란 3개·물 150ml: 소금 0.3 · 새우젓 0.3 · 쪽파 (체에 걸러 약불에서 12분)",
+    "어묵볶음": "어묵 200g: 간장 1.5 · 물엿 1 · 고춧가루 0.5 · 다진마늘 0.3 · 참기름 0.5 (끓는 물에 한 번 데치기)",
+    "깻잎장아찌": "깻잎 30장: 간장 3 · 식초 1 · 설탕 1.5 · 물 1컵 (한 장씩 겹쳐 3일 숙성)",
+    "손두부구이": "두부 반 모: 소금물에 5분 담갔다 물기 빼기 · 노릇하게 (간장 1 · 쪽파 0.5 · 참기름 0.5 양념장)",
+    "고사리나물": "삶은 고사리 200g: 국간장 1 · 다진마늘 0.5 · 참기름 1 · 들깨가루 1 (볶다 물을 조금씩)",
+    "로메인": "씻어 물기만 빼기 (쌈장: 된장 1 · 고추장 0.5 · 참기름 0.5 · 다진마늘 0.2)",
+    "겨자잎 겉절이": "겨자잎 한 줌: 간장 1 · 식초 1 · 설탕 0.7 · 고춧가루 0.7 · 다진마늘 0.3 (먹기 직전 버무리기)",
+    "겨자잎 샐러드": "겨자잎 한 줌: 올리브오일 1 · 식초 1 · 설탕 0.7 · 소금 0.2 (드레싱은 먹기 직전에)",
+    "흰쌀밥": "쌀 2컵에 물 2컵 · 30분 불렸다가 취사 (4인 한 끼)"
+  };
+  var RECIPE_KEYS = null;
+  function recipeKeys() {
+    if (RECIPE_KEYS) return RECIPE_KEYS;
+    var ks = [];
+    for (var k in DEFAULT_RECIPES) {
+      if (hasKey(DEFAULT_RECIPES, k)) ks.push(k);
+    }
+    ks.sort(function (a, b) { return b.length - a.length; });
+    RECIPE_KEYS = ks;
+    return ks;
+  }
+
+  /* 메뉴 글에서 기본 레시피 낱말을 찾는다 (긴 이름 먼저, 겹치면 건너뛰기) */
+  function defaultNotes(text) {
+    var s = cleanText(text);
+    if (!s) return [];
+    var ks = recipeKeys(), used = [], hits = [];
+    for (var i = 0; i < ks.length; i++) {
+      var key = ks[i];
+      var at = s.indexOf(key);
+      if (at < 0) continue;
+      var end = at + key.length, clash = false;
+      for (var j = 0; j < used.length; j++) {
+        if (at < used[j].e && end > used[j].s) { clash = true; break; }
+      }
+      if (clash) continue;
+      used.push({ s: at, e: end });
+      hits.push({ at: at, name: key, text: DEFAULT_RECIPES[key] });
+    }
+    hits.sort(function (a, b) { return a.at - b.at; });
+    return hits;
+  }
+
+  /* 이 메뉴의 메모: 직접 적은 것(own) 먼저, 없으면 기본 레시피 */
+  function noteOf(it) {
+    var own = cleanText(it && it.note ? it.note : "");
+    if (own) return { own: true, hits: [], text: own };
+    return { own: false, hits: defaultNotes(it ? it.v : ""), text: "" };
+  }
+  function hasNote(it) {
+    var n = noteOf(it);
+    return !!(n.own || n.hits.length);
+  }
+
   var dayRows = {};      /* 요일 → .rows */
   var seedItems = {};    /* 요일 → 처음 식단 [{k,v}] */
   var diet = null;       /* {ver:1, seq:n, days:{요일:[{id,k,v}]}} */
@@ -1779,7 +1890,12 @@
   function withIds(list) {
     var out = [];
     each(list, function (it) {
-      out.push({ id: nextId(), k: cleanText(it ? it.k : ""), v: cleanText(it ? it.v : "") });
+      out.push({
+        id: nextId(),
+        k: cleanText(it ? it.k : ""),
+        v: cleanText(it ? it.v : ""),
+        note: cleanText(it && it.note ? it.note : "")
+      });
     });
     return out;
   }
@@ -1795,7 +1911,7 @@
       var out = [];
       each(list, function (it) {
         if (!it || !it.id) return;
-        out.push({ id: String(it.id), k: cleanText(it.k), v: cleanText(it.v) });
+        out.push({ id: String(it.id), k: cleanText(it.k), v: cleanText(it.v), note: cleanText(it.note) });
       });
       diet.days[dd.id] = out;
     });
@@ -1885,6 +2001,19 @@
     l2.appendChild(kIn);
     l2.appendChild(vIn);
 
+    var l3 = document.createElement("div");
+    l3.className = "rline";
+    var nLab = document.createElement("span");
+    nLab.className = "rlab2";
+    nLab.textContent = "메모";
+    var nIn = document.createElement("input");
+    nIn.type = "text";
+    nIn.className = "rnin";
+    nIn.value = it.note || "";
+    nIn.setAttribute("placeholder", "양념·레시피 메모 (선택)");
+    l3.appendChild(nLab);
+    l3.appendChild(nIn);
+
     var b = document.createElement("div");
     b.className = "rbtns";
     var sv = document.createElement("button");
@@ -1902,8 +2031,37 @@
 
     p.appendChild(l1);
     p.appendChild(l2);
+    p.appendChild(l3);
     p.appendChild(b);
     return p;
+  }
+
+  /* 메뉴 줄 아래에 펼쳐지는 작은 메모 카드 (직접 적은 메모 → 그 글, 없으면 기본 레시피) */
+  function makeCard(info) {
+    var card = document.createElement("div");
+    card.className = "rcard";
+    card.setAttribute("hidden", "hidden");
+    if (info.own) {
+      var pOwn = document.createElement("p");
+      pOwn.textContent = info.text;
+      card.appendChild(pOwn);
+      return card;
+    }
+    if (info.hits.length === 1) {
+      var pOne = document.createElement("p");
+      pOne.textContent = info.hits[0].text;
+      card.appendChild(pOne);
+      return card;
+    }
+    each(info.hits, function (h) {
+      var p = document.createElement("p");
+      var nm = document.createElement("b");
+      nm.textContent = h.name;
+      p.appendChild(nm);
+      p.appendChild(document.createTextNode(h.text));
+      card.appendChild(p);
+    });
+    return card;
   }
 
   function makeItem(dayId, it) {
@@ -1934,6 +2092,8 @@
     lab.appendChild(ks);
     lab.appendChild(vs);
 
+    var info = noteOf(it);
+
     var more = document.createElement("button");
     more.type = "button";
     more.className = "rmore";
@@ -1942,8 +2102,19 @@
     more.setAttribute("aria-label", (it.k || "메뉴") + " 조작");
 
     row.appendChild(lab);
+    if (info.own || info.hits.length) {
+      var chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "rnchip" + (info.own ? " own" : "");
+      chip.textContent = "양념";
+      chip.setAttribute("data-note-toggle", it.id);
+      chip.setAttribute("data-own", info.own ? "1" : "0");
+      chip.setAttribute("aria-label", (it.v || "메뉴") + " 양념·레시피 메모");
+      row.appendChild(chip);
+    }
     row.appendChild(more);
     wrap.appendChild(row);
+    wrap.appendChild(makeCard(info));
     wrap.appendChild(makePanel(dayId, it));
     return wrap;
   }
@@ -1997,11 +2168,39 @@
     each(document.querySelectorAll(".mrow .rpanel"), function (p) { p.setAttribute("hidden", "hidden"); });
   }
 
+  /* 양념 메모 카드 접기 (칩 표시도 같이 되돌리기) */
+  function closeNotes() {
+    each(document.querySelectorAll(".mrow .rcard"), function (c) { c.setAttribute("hidden", "hidden"); });
+    each(document.querySelectorAll(".mrow .rnchip"), function (b) { chipOn(b, false); });
+  }
+  function chipOn(chip, on) {
+    if (!chip) return;
+    var base = "rnchip" + (chip.getAttribute("data-own") === "1" ? " own" : "");
+    chip.className = on ? base + " on" : base;
+  }
+
+  function toggleNote(btn) {
+    if (!btn) return;
+    var wrap = upAttr(btn, "data-id");
+    if (!wrap) return;
+    var card = wrap.querySelector(".rcard");
+    if (!card) return;
+    var wasOpen = !card.hasAttribute("hidden");
+    closeNotes();
+    closeRowPanels();
+    closeAdds();
+    if (!wasOpen) {
+      card.removeAttribute("hidden");
+      chipOn(btn, true);
+    }
+  }
+
   function togglePanel(wrap) {
     if (!wrap) return;
     var p = wrap.querySelector(".rpanel");
     if (!p) return;
     var wasOpen = !p.hasAttribute("hidden");
+    closeNotes();
     closeRowPanels();
     closeAdds();
     if (wasOpen) p.setAttribute("hidden", "hidden");
@@ -2047,6 +2246,8 @@
     if (!f) return;
     f.item.k = k;
     f.item.v = v;
+    var nIn = w.querySelector(".rnin");
+    f.item.note = nIn ? cleanText(nIn.value) : "";
     saveDiet();
     renderDay(dayId);
     update();
@@ -2071,6 +2272,7 @@
   function openAdd(dayId) {
     closeAdds();
     closeRowPanels();
+    closeNotes();
     var rowsEl = dayRows[dayId];
     if (!rowsEl) return;
     var p = document.createElement("div");
@@ -2087,6 +2289,17 @@
     vIn.setAttribute("placeholder", "메뉴 (예: 계란말이)");
     l2.appendChild(kIn);
     l2.appendChild(vIn);
+    var l3 = document.createElement("div");
+    l3.className = "rline";
+    var nLab = document.createElement("span");
+    nLab.className = "rlab2";
+    nLab.textContent = "메모";
+    var nIn = document.createElement("input");
+    nIn.type = "text";
+    nIn.className = "rnin";
+    nIn.setAttribute("placeholder", "양념·레시피 메모 (선택)");
+    l3.appendChild(nLab);
+    l3.appendChild(nIn);
     var b = document.createElement("div");
     b.className = "rbtns";
     var sv = document.createElement("button");
@@ -2104,6 +2317,7 @@
     tip.className = "mdtip";
     tip.textContent = "(집)을 붙이면 주황 '집' 표시가 생겨요.";
     p.appendChild(l2);
+    p.appendChild(l3);
     p.appendChild(b);
     p.appendChild(tip);
     rowsEl.appendChild(p);
@@ -2113,7 +2327,7 @@
       var k = cleanText(kIn.value), v = cleanText(vIn.value);
       if (!k && !v) { closeAdds(); return; }
       if (!diet.days[dayId]) diet.days[dayId] = [];
-      diet.days[dayId].push({ id: nextId(), k: k, v: v });
+      diet.days[dayId].push({ id: nextId(), k: k, v: v, note: cleanText(nIn.value) });
       saveDiet();
       renderDay(dayId);
       update();
@@ -2150,6 +2364,7 @@
     closeEditors();
     closeAdds();
     closeRowPanels();
+    closeNotes();
     var box = document.createElement("div");
     box.className = "medit-box";
     var ta = document.createElement("textarea");
@@ -2159,7 +2374,7 @@
     ta.value = dayText(dayId);
     var tip = document.createElement("p");
     tip.className = "mdtip";
-    tip.textContent = "한 줄에 하나씩 '구분: 메뉴' 순서로 적어 주세요. (집)을 붙이면 '집' 표시가 생겨요. 저장하면 이 요일 체크는 풀려요.";
+    tip.textContent = "한 줄에 하나씩 '구분: 메뉴' 순서로 적어 주세요. (집)을 붙이면 '집' 표시가 생기고, 적어 둔 양념 메모는 같은 메뉴에 그대로 남아요. 저장하면 이 요일 체크는 풀려요.";
     var btns = document.createElement("div");
     btns.className = "mdbtns";
     var saveB = document.createElement("button");
@@ -2180,8 +2395,19 @@
     try { ta.focus(); } catch (e) {}
 
     saveB.addEventListener("click", function () {
+      var oldList = diet.days[dayId] || [];
       var list = parseLines(ta.value);
-      each(diet.days[dayId] || [], function (it) {
+      /* 같은 '구분 + 메뉴' 줄이면 적어 둔 양념 메모를 그대로 이어받기 */
+      each(list, function (it) {
+        var k = cleanText(it.k), v = cleanText(it.v);
+        for (var i = 0; i < oldList.length; i++) {
+          if (cleanText(oldList[i].k) === k && cleanText(oldList[i].v) === v) {
+            if (oldList[i].note) it.note = oldList[i].note;
+            break;
+          }
+        }
+      });
+      each(oldList, function (it) {
         try { delete store.items["i|diet-" + it.id]; } catch (e) {}
       });
       diet.days[dayId] = withIds(list);
@@ -2199,6 +2425,7 @@
     document.addEventListener("click", function (ev) {
       var t = ev.target;
       var el;
+      if ((el = upAttr(t, "data-note-toggle"))) { ev.preventDefault(); toggleNote(el); return; }
       if ((el = upAttr(t, "data-more"))) { ev.preventDefault(); togglePanel(upAttr(el, "data-id")); return; }
       if ((el = upAttr(t, "data-save"))) { ev.preventDefault(); saveEdit(el.getAttribute("data-save")); return; }
       if ((el = upAttr(t, "data-del"))) { ev.preventDefault(); delItem(el.getAttribute("data-del")); return; }
