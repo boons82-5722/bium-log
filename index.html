@@ -1433,6 +1433,7 @@
         store.extra = p.extra || [];
         store.tab = p.tab || "";
         store.menus = (p.menus && typeof p.menus === "object") ? p.menus : {};
+        store.diet = (p.diet && typeof p.diet === "object") ? p.diet : null;
       }
     }
   } catch (e) { canStore = false; }
