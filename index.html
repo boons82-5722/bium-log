@@ -479,7 +479,7 @@
     box-shadow:0 6px 18px rgba(0,0,0,.24)}
 
 
-  /* ===== 비우기 달력: 4개월 이동 (JS) ===== */
+  /* ===== 비우기 달력: 달 이동 (JS) ===== */
   .calbar{display:none;align-items:center;gap:8px;margin:7px 0 0;padding:0 2px}
   html.cal-on .calbar{display:flex}
   .navbtn{flex:none;display:flex;align-items:center;justify-content:center;width:36px;height:36px;
@@ -2250,19 +2250,13 @@
 </script>
 
 <script>
-/* ===== 비움로그: 4개월 달력(2026.11~2027.2) · 날짜별 사진·기록 올리기 / 삭제 ===== */
+  /* ===== 비움로그: 달력(연·월 제한 없음) · 날짜별 사진·기록 올리기 / 삭제 ===== */
 (function () {
   var root = document.documentElement;
   try { if (root.className.indexOf("js-on") < 0) root.className += " js-on"; } catch (e) {}
 
-  /* 비우기 4개월: 2026-11(30일) · 2026-12(31일) · 2027-01(31일) · 2027-02(28일) */
-  var MONTHS = [
-    { y: 2026, m: 10, n: 30, key: "2026-11", label: "2026년 11월" },
-    { y: 2026, m: 11, n: 31, key: "2026-12", label: "2026년 12월" },
-    { y: 2027, m: 0,  n: 31, key: "2027-01", label: "2027년 1월" },
-    { y: 2027, m: 1,  n: 28, key: "2027-02", label: "2027년 2월" }
-  ];
-  var LAST_KEY = MONTHS[MONTHS.length - 1].key;
+  /* 달력은 연·월 제한 없이 어디로든 간다. 화면에 보이는 달만 기억한다 (curM은 1~12) */
+  var curY = 2026, curM = 11;
   var DB_NAME = "biumlog-db", STORE_NAME = "records", LS_KEY = "biumlog-records-v1";
   /* 시드 기록: 11/16 화장품·잡화 14개(타임스탬프 사진) · 11/17 TV 리모컨 1개(연습) */
   var SEEDS = {
@@ -2276,7 +2270,7 @@
 
   var db = null, lsOnly = false;
   var map = {};                    /* id -> 기록 (삭제 표시 포함) */
-  var curIdx = 0, selDate = "", addOpen = false, editId = "";
+  var selDate = "", addOpen = false, editId = "";
 
   /* ---------- 작은 도구 ---------- */
   function qs(sel, ctx) {
@@ -2329,16 +2323,27 @@
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
-  /* ---------- 날짜 도구 (YYYY-MM-DD 문자열 기준) ---------- */
+  /* ---------- 날짜 도구 (YYYY-MM-DD 문자열 기준 · 연·월 제한 없음) ---------- */
   function mkDate(y, m, d) { return y + "-" + pad2(m + 1) + "-" + pad2(d); }
   function todayStr() {
     var d = new Date();
     return mkDate(d.getFullYear(), d.getMonth(), d.getDate());
   }
-  function monthOf(ds) {                       /* 그 달이 4개월 안이면 인덱스, 아니면 -1 */
-    var k = String(ds || "").slice(0, 7), i;
-    for (i = 0; i < MONTHS.length; i++) { if (MONTHS[i].key === k) return i; }
-    return -1;
+  function daysInMonth(y, m) {                 /* m은 1~12 · 윤년 2월 29일까지 */
+    return new Date(y, m, 0).getDate();
+  }
+  function isValidDate(ds) {                   /* 2026-02-30 같은 없는 날짜는 거른다 */
+    var m = String(ds === null || ds === undefined ? "" : ds).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return false;
+    var y = parseInt(m[1], 10), mo = parseInt(m[2], 10), d = parseInt(m[3], 10);
+    return mo >= 1 && mo <= 12 && d >= 1 && d <= daysInMonth(y, mo);
+  }
+  function ymKeyOf(y, m) { return y + "-" + pad2(m); }
+  function setMonthOf(ds) {                    /* 그 날짜의 달을 화면에 보이게 */
+    if (!isValidDate(ds)) return false;
+    curY = parseInt(String(ds).slice(0, 4), 10);
+    curM = parseInt(String(ds).slice(5, 7), 10);
+    return true;
   }
   function weekdayKo(ds) {
     try {
@@ -2346,15 +2351,17 @@
       return ["일", "월", "화", "수", "목", "금", "토"][new Date(+p[0], (+p[1]) - 1, +p[2]).getDay()] || "";
     } catch (e) { return ""; }
   }
-  function dateLabel(ds) {                     /* "11월 17일 (화)" */
+  function dateLabel(ds) {                     /* "11월 17일 (화)" · 해가 다르면 "2025년 3월 5일 (수)" */
     var p = String(ds).split("-");
     if (p.length !== 3) return "";
-    return parseInt(p[1], 10) + "월 " + parseInt(p[2], 10) + "일 (" + weekdayKo(ds) + ")";
+    var yl = (p[0] === String(new Date().getFullYear())) ? "" : p[0] + "년 ";
+    return yl + parseInt(p[1], 10) + "월 " + parseInt(p[2], 10) + "일 (" + weekdayKo(ds) + ")";
   }
-  function shortDate(ds) {                     /* "11/17" */
+  function shortDate(ds) {                     /* "11/17" · 해가 다르면 "25.3.5" */
     var p = String(ds).split("-");
     if (p.length !== 3) return "";
-    return parseInt(p[1], 10) + "/" + parseInt(p[2], 10);
+    if (p[0] === String(new Date().getFullYear())) return parseInt(p[1], 10) + "/" + parseInt(p[2], 10);
+    return p[0].slice(2) + "." + parseInt(p[1], 10) + "." + parseInt(p[2], 10);
   }
   function dateOf(r) {                         /* 기록 → 날짜 (예전 day-only 기록도 살림) */
     if (!r) return "";
@@ -2365,10 +2372,10 @@
     if (r.day >= 1 && r.day <= 31) return mkDate(2026, 10, parseInt(r.day, 10));
     return "";
   }
-  function defaultSel(i) {
-    var mo = MONTHS[i], t = todayStr();
-    if (t.slice(0, 7) === mo.key) return t;
-    return mkDate(mo.y, mo.m, 1);
+  function defaultSel() {                       /* 그 달에 오늘이 있으면 오늘, 아니면 1일 */
+    var t = todayStr();
+    if (t.slice(0, 7) === ymKeyOf(curY, curM)) return t;
+    return ymKeyOf(curY, curM) + "-01";
   }
 
   /* ---------- 저장 (IndexedDB → 막히면 localStorage) ---------- */
@@ -2453,7 +2460,7 @@
   }
 
   /* ---------- 데이터 ---------- */
-  function isActive(r) { return !!r && !r.deleted && monthOf(dateOf(r)) >= 0; }
+  function isActive(r) { return !!r && !r.deleted && isValidDate(dateOf(r)); }
   function seedGone(id) { return !!(map[id] && map[id].deleted); }
 
   /* 시드 기록: 고친본이 저장돼 있으면 그걸 쓰고, 없으면 원본 시드 */
@@ -2488,7 +2495,7 @@
     return out;
   }
 
-  function activeList() {                       /* 4개월 전체 기록 (최근 순) */
+  function activeList() {                       /* 저장된 모든 기록 (최근 순) */
     var out = [], k, r, i;
     for (k in map) {
       if (!own(map, k)) continue;
@@ -2557,30 +2564,29 @@
   function renderGrid() {
     var g = qs("#calGrid");
     if (!g) return;
-    var mo = MONTHS[curIdx];
-    var today = todayStr();
+    var today = todayStr(), n = daysInMonth(curY, curM), label = curY + "년 " + curM + "월";
     var h = '<span class="dw sun">일</span><span class="dw">월</span><span class="dw">화</span>' +
             '<span class="dw">수</span><span class="dw">목</span><span class="dw">금</span>' +
             '<span class="dw sat">토</span>';
-    var lead = new Date(mo.y, mo.m, 1).getDay();
+    var lead = new Date(curY, curM - 1, 1).getDay();
     var b, d, ds, q, cls;
     for (b = 0; b < lead; b++) h += '<span class="cd blank"></span>';
-    for (d = 1; d <= mo.n; d++) {
-      ds = mkDate(mo.y, mo.m, d);
+    for (d = 1; d <= n; d++) {
+      ds = ymKeyOf(curY, curM) + "-" + pad2(d);
       q = dateQty(ds);
       cls = "cd";
       if (q > 0) cls += " has";
       if (ds === today) cls += " today";
       if (ds === selDate) cls += " sel";
       h += '<button type="button" class="' + cls + '" data-calday="' + ds + '"' +
-           ' aria-label="' + mo.label + " " + d + "일 " + (q ? q + "개" : "기록 없음") + '"' +
+           ' aria-label="' + label + " " + d + "일 " + (q ? q + "개" : "기록 없음") + '"' +
            (ds === selDate ? ' aria-pressed="true"' : '') + '>';
       h += '<span class="n">' + d + '</span>';
       if (q > 0) h += '<span class="b">' + q + '</span>';
       if (ds === today) h += '<span class="tdy">오늘</span>';
       h += '</button>';
     }
-    var cells = lead + mo.n;
+    var cells = lead + n;
     var tail = (7 - (cells % 7)) % 7;
     for (b = 0; b < tail; b++) h += '<span class="cd blank"></span>';
     g.innerHTML = h;
@@ -2601,7 +2607,7 @@
           '<div class="datebar">' +
             '<span class="dlabel">저장 날짜</span>' +
             '<input type="date" id="date-' + uid + '" class="phdate" value="' + ds + '"' +
-              ' min="2026-11-01" max="2027-02-28" aria-label="저장 날짜">' +
+              ' aria-label="저장 날짜">' +
           '</div>' +
           '<div class="addrow">' +
             '<input type="text" id="item-' + uid + '" class="phname" maxlength="40" placeholder="품목명 (예: 안 쓰는 믹서기)">' +
@@ -2667,11 +2673,9 @@
     var note = document.getElementById("sumNote");
     if (note) {
       var t = todayStr();
-      var inWin = monthOf(t) >= 0;
-      var q = inWin ? dateQty(t) : 0;
-      note.textContent = "2월까지 100개가 목표예요. " +
-        (!inWin ? "오늘 날짜는 달력 밖이에요." :
-         (q ? "오늘 " + q + "개 비웠어요." : "오늘은 아직 0개예요. 하나만 비워 볼까요?"));
+      var q = dateQty(t);
+      note.textContent = "100개가 목표예요. " +
+        (q ? "오늘 " + q + "개 비웠어요." : "오늘은 아직 0개예요. 하나만 비워 볼까요?");
     }
   }
 
@@ -2696,18 +2700,17 @@
   }
 
   function updateHead() {
-    var mo = MONTHS[curIdx];
     var mm = document.getElementById("calMonth");
-    if (mm) mm.textContent = mo.label;
+    if (mm) mm.textContent = curY + "년 " + curM + "월";
     var sub = document.getElementById("calSub");
     if (sub) {
-      sub.textContent = mo.key === LAST_KEY
+      sub.textContent = (ymKeyOf(curY, curM) === "2027-02")
         ? "이사 달이에요 · 날짜를 누르면 그날 사진이 보여요"
         : "날짜를 누르면 그날 사진이 보여요";
     }
     var pv = document.getElementById("calPrev"), nx = document.getElementById("calNext");
-    if (pv) pv.disabled = curIdx <= 0;
-    if (nx) nx.disabled = curIdx >= MONTHS.length - 1;
+    if (pv) pv.disabled = false;                /* 연·월 제한 없이 어디로든 이동 */
+    if (nx) nx.disabled = false;
   }
 
   function render() {
@@ -2737,18 +2740,17 @@
 
   /* ---------- 날짜 이동 · 선택 ---------- */
   function selectDate(ds) {
-    if (!ds || monthOf(ds) < 0) return;
+    if (!setMonthOf(ds)) return;
     selDate = ds;
-    curIdx = monthOf(ds);
     addOpen = false;
     render();
   }
 
-  function moveMonth(step) {
-    var i = curIdx + step;
-    if (i < 0 || i >= MONTHS.length) return;
-    curIdx = i;
-    selDate = defaultSel(i);
+  function moveMonth(step) {                    /* step 만큼 앞/뒤 달로 · 끝이 없다 */
+    var i = curY * 12 + (curM - 1) + step;
+    curY = Math.floor(i / 12);
+    curM = ((i % 12) + 12) % 12 + 1;
+    selDate = defaultSel();
     addOpen = false;
     editId = "";
     render();
@@ -2933,7 +2935,7 @@
     var dateIn = qs(".phdate", form);
     var ds = (dateIn && dateIn.value) ? String(dateIn.value) : (form.getAttribute("data-date") || selDate || todayStr());
     if (!/^\d{4}-\d{2}-\d{2}$/.test(ds)) ds = form.getAttribute("data-date") || selDate || todayStr();
-    if (monthOf(ds) < 0) { flash("이 달에는 기록할 수 없어요 · 2026.11~2027.2 안에서 골라 주세요"); return; }
+    if (!isValidDate(ds)) ds = todayStr();
     var fileIn = qs(".phfile", form), nameIn = qs(".phname", form), qtyIn = qs(".phqty", form);
     var msg = qs(".addmsg", form), submit = qs(".submitbtn", form);
     var item = nameIn ? String(nameIn.value || "").replace(/\s+/g, " ").replace(/^ | $/g, "") : "";
@@ -2969,8 +2971,8 @@
           return;
         }
         /* 해당 날짜로 이동해 그 날 날짜 상세와 누적 합계를 바로 보여준다 */
-        var moved = (monthOf(ds) >= 0 && ds !== selDate);
-        if (moved) { selDate = ds; curIdx = monthOf(ds); }
+        var moved = (ds !== selDate);
+        if (moved) { selDate = ds; setMonthOf(ds); }
         addOpen = true;
         render();
         if (moved) {
@@ -3190,7 +3192,7 @@
           if (!cur || cur.name !== file.name || cur.size !== file.size || cur.lastModified !== file.lastModified) return;
           if (!note) note = form ? qs(".exifnote", form) : null;
           if (!dateIn) dateIn = form ? qs(".phdate", form) : null;
-          if (exif && monthOf(exif) >= 0) {
+          if (exif && isValidDate(exif)) {
             if (dateIn) dateIn.value = exif;
             if (form) form.setAttribute("data-date", exif);
             if (note) {
@@ -3200,12 +3202,6 @@
             }
             syncSubmit(form);
             flash("사진 촬영일 " + shortDate(exif) + "로 맞췄어요");
-          } else if (exif) {
-            if (note) {
-              note.textContent = "📅 사진은 " + exif + " 촬영인데 달력(2026.11~2027.2) 밖이에요 · 고른 날짜로 저장돼요";
-              note.hidden = false;
-              setClass(note, "mute", true);
-            }
           } else if (note) {
             note.textContent = "📅 촬영일을 못 읽었어요 · 고른 날짜로 저장돼요";
             note.hidden = false;
@@ -3221,9 +3217,11 @@
   var AI_SYS = "너는 사진 속 물건을 세는 도우미야. 항상 JSON 객체 하나만 답해.";
   var AI_PROMPT = [
     "이 사진은 집에서 버릴 물건을 한곳에 모아 찍은 사진이에요.",
-    "1) 사진에 찍힌 타임스탬프 글씨(예: \"2026년 11월 16일 (월) 오후 8:25\")에서 촬영 날짜를 읽어 date에 YYYY-MM-DD 형식으로 넣으세요. 글씨가 없거나 못 읽으면 null.",
-    "2) 배경(바닥·소파·벽·손)은 빼고, 실제로 버리려고 모아 둔 물건의 총 개수를 count에 숫자로 넣으세요. 화장품·잡화는 낱개마다 하나로 세세요.",
-    "3) 그 물건들을 짧게 요약해 items에 20자 이내 한국어로 넣으세요. (예: \"화장품·잡화 비우기\")",
+    "1) 먼저 사진에 찍힌 타임스탬프(촬영 날짜·시각 글씨)를 찾아 읽으세요. 보통 사진의 좌측 하단이나 우측 상단 모서리에 흰색·노란색 작은 글씨로 \"2026년 10월 31일 (토) 오후 9:12\" 또는 \"2026.10.31 21:12\" 같은 식으로 찍혀 있어요. 글씨가 작으면 확대해서 연도·월·일을 하나씩 확인하세요.",
+    "2) 읽은 날짜는 date에 YYYY-MM-DD 형식으로 넣으세요. (2026년 10월 31일 → \"2026-10-31\" · 26.11.16 → \"2026-11-16\" · 11월 16일 → 올해가 2026년이니 \"2026-11-16\")",
+    "3) 타임스탬프가 없거나 못 읽으면 date는 null로 두세요. 제품에 인쇄된 유통기한·제조일자는 촬영 날짜가 아니에요.",
+    "4) 배경(바닥·소파·벽·손)은 빼고, 실제로 버리려고 모아 둔 물건의 총 개수를 count에 숫자로 넣으세요. 화장품·잡화는 낱개마다 하나로 세세요.",
+    "5) 그 물건들을 짧게 요약해 items에 20자 이내 한국어로 넣으세요. (예: \"화장품·잡화 비우기\")",
     "답은 {\"date\": \"YYYY-MM-DD\" 또는 null, \"count\": 숫자, \"items\": \"요약\"} 형태의 JSON 하나만."
   ].join("\n");
 
@@ -3283,9 +3281,9 @@
     setClass(n, "busy", kind !== "ok");
   }
 
-  /* 사진 → 최대 폭 800px JPEG (AI로 보낼 용량 줄이기) */
+  /* 사진 → 최대 폭 1024px JPEG (AI로 보낼 용량 줄이기 · 타임스탬프 작은 글씨가 뭉개지지 않게) */
   function shrinkForAI(img) {
-    var MAX = 800;
+    var MAX = 1024;
     var w = img.naturalWidth || img.width || 0, h = img.naturalHeight || img.height || 0;
     if (!w || !h) return "";
     var ratio = w > MAX ? MAX / w : 1;
@@ -3320,6 +3318,50 @@
     try { reader.readAsDataURL(file); } catch (e) { cb(""); }
   }
 
+  /* 연도가 없을 때: 10~12월은 올해, 1~2월은 내년으로 본다 */
+  function yearGuess(m) {
+    var y = new Date().getFullYear();
+    return (m >= 10) ? y : ((m <= 2) ? y + 1 : y);
+  }
+
+  /* AI가 어떤 표기로 답해도 앱이 쓰는 "YYYY-MM-DD"로 맞춘다.
+     2026-10-31 · 2026.10.31 · 2026/10/31 · 2026년 10월 31일 (토) · 26.10.31 ·
+     10월 31일 · 10/31 · 2026-10-31T21:12:00+09:00 · 20261031 · 31.10.2026 */
+  function aiDateStr(v) {
+    var s = String(v === null || v === undefined ? "" : v).replace(/^ | $/g, "");
+    if (!s || /^(null|undefined|none|unknown|nan)$/i.test(s)) return "";
+    var num = s.match(/\d+/g) || [], cand = [], sep = /[월년\/.\-]/.test(s), i, j, t, y, rest;
+
+    function add(cy, cm, cd) {
+      if (!(cm >= 1 && cm <= 12)) return;
+      if (!(cd >= 1 && cd <= 31)) return;
+      if (cy && (cy < 1900 || cy > 2199)) return;
+      if (cy && cd > daysInMonth(cy, cm)) return;
+      cand.push([cy, cm, cd]);
+    }
+
+    for (i = 0; i < num.length; i++) {
+      t = num[i];
+      if (t.length === 8) {                     /* 20261031 */
+        add(parseInt(t.slice(0, 4), 10), parseInt(t.slice(4, 6), 10), parseInt(t.slice(6, 8), 10));
+      } else if (t.length === 4) {              /* 연도가 들어 있는 표기 */
+        y = parseInt(t, 10);
+        rest = [];
+        for (j = 0; j < num.length; j++) { if (j !== i) rest.push(parseInt(num[j], 10)); }
+        if (rest.length >= 2) { add(y, rest[0], rest[1]); add(y, rest[1], rest[0]); }
+      }
+    }
+    if (sep && num.length >= 3 && num[0].length <= 2) {   /* 26.10.31 → 2026-10-31 */
+      add(2000 + parseInt(num[0], 10), parseInt(num[1], 10), parseInt(num[2], 10));
+    }
+    if (sep && num.length >= 2) {                /* 연도 없는 10월 31일 · 10/31 */
+      add(0, parseInt(num[0], 10), parseInt(num[1], 10));
+    }
+    if (!cand.length) return "";
+    y = cand[0][0] || yearGuess(cand[0][1]);
+    return y + "-" + pad2(cand[0][1]) + "-" + pad2(cand[0][2]);
+  }
+
   function aiParse(raw) {
     var t = String(raw || "").replace(/```[a-zA-Z]*/g, "").replace(/```/g, "").replace(/^ | $/g, "");
     if (!t) return null;
@@ -3328,10 +3370,13 @@
     var o = null;
     try { o = JSON.parse(t); } catch (e) { o = null; }
     if (!o || typeof o !== "object") return null;
-    var ds = o.date ? String(o.date).replace(/[^0-9-]/g, "") : "";
-    if (ds && !/^\d{4}-\d{2}-\d{2}$/.test(ds)) ds = "";
+    var dv = o.date;
+    if (dv === undefined || dv === null || dv === "") {
+      dv = o.datetime || o.timestamp || o.dateText || o["날짜"] || o["촬영일"] || "";
+    }
+    var ds = aiDateStr(dv);
     var c = parseInt(o.count, 10);
-    return { date: ds, count: (c > 0) ? c : 0, items: String(o.items || "").slice(0, 40) };
+    return { date: ds, count: (c > 0) ? c : 0, items: String(o.items || o.item || "").slice(0, 40) };
   }
 
   /* Gemini 모델: 2.5-flash 우선, 400/404면 3.5-flash-lite로 한 번만 더
@@ -3490,14 +3535,16 @@
           return;
         }
         var bits = [];
-        var ds = res.date;
+        var ds = res.date, badDate = "";
         var di = form ? qs(".phdate", form) : null;
-        if (ds && monthOf(ds) >= 0) {
+        if (ds && isValidDate(ds)) {
           if (di) di.value = ds;
           if (form) form.setAttribute("data-date", ds);
           var en = form ? qs(".exifnote", form) : null;
           if (en) { en.hidden = true; en.textContent = ""; }
           bits.push(shortDate(ds) + " 날짜");
+        } else if (ds) {
+          badDate = ds;                          /* 읽긴 했는데 쓸 수 없는 날짜 */
         }
         var qi = form ? qs(".phqty", form) : null;
         if (res.count > 0 && qi) {
@@ -3508,7 +3555,10 @@
         var ii = form ? qs(".phname", form) : null;
         if (res.items && ii && !String(ii.value || "").replace(/^ | $/g, "")) ii.value = res.items;
         aiLockOff(form);   /* 버튼 다시 활성화 + 날짜에 맞는 문구로 복원 */
-        if (bits.length) aiFormNote(form, "🤖 AI가 " + bits.join(" · ") + "로 채웠어요 · 확인하고 [올리기]만 누르세요", "ok");
+        if (badDate) {
+          aiFormNote(form, "🤖 AI가 읽은 날짜(" + badDate + ")가 올바르지 않아요" +
+            (bits.length ? " · " + bits.join(" · ") + "는 채웠어요" : "") + " · 날짜는 직접 골라 주세요", "");
+        } else if (bits.length) aiFormNote(form, "🤖 AI가 " + bits.join(" · ") + "로 채웠어요 · 확인하고 [올리기]만 누르세요", "ok");
         else aiFormNote(form, "🤖 이 사진에서는 날짜·개수를 못 읽었어요 · 직접 넣어 주세요", "");
       });
     });
@@ -3580,10 +3630,9 @@
 
     try {
       var t = todayStr();
-      var ti = monthOf(t);
-      curIdx = ti >= 0 ? ti : (t < MONTHS[0].key ? 0 : MONTHS.length - 1);
-      selDate = defaultSel(curIdx);
-    } catch (e) { curIdx = 0; selDate = "2026-11-01"; }
+      if (!setMonthOf(t)) { curY = 2026; curM = 11; }
+      selDate = defaultSel();
+    } catch (e) { curY = 2026; curM = 11; selDate = "2026-11-01"; }
 
     try { aiWire(); } catch (e) {}
 
