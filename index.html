@@ -179,6 +179,41 @@
     color:#c25a25;background:#fbe6d3;border-radius:5px;padding:0 4px;margin-left:4px;vertical-align:1px;
   }
 
+  /* day check + menu edit */
+  .day-h{gap:6px}
+  .day-h .day-row{flex:1;min-width:0;padding:0;min-height:0;border:0;align-items:center;border-radius:0}
+  .day-h .day-row .box{width:20px;height:20px;margin:0 9px 0 0;border-radius:6px}
+  .day-h .day-row .txt{font-size:13.5px;font-weight:800;color:#43362c;display:flex;align-items:center}
+  .day-h .day-row .txt .d{margin-right:6px}
+  .day-h .day-row .b{margin-left:6px}
+  .medit{
+    flex:none;margin-left:8px;min-height:32px;padding:0 10px;
+    border:1px solid #ecd9c4;border-radius:9px;background:#fffaf3;
+    color:#a4785a;font-size:11.5px;font-weight:800;font-family:inherit;cursor:pointer;
+  }
+  .medit:active{background:#fbe6d3}
+  .day.done .rows{opacity:.62}
+  .day.done .rows .row .v{color:#b5a595;text-decoration:line-through}
+  .day.done .rows .row .k{color:#c8bbac}
+  .day.done .rows .row .h{opacity:.45}
+  .day.done .day-h .day-row .txt{color:#b5a595;text-decoration:line-through}
+  .day.done .day-h .day-row .txt .d{color:#c8bbac}
+  .day.editing .rows{display:none}
+  .day.editing .day-h{background:#fdeedd}
+  .medit-box{padding:2px 12px 11px}
+  .medit-box .mdta{
+    display:block;width:100%;min-height:124px;padding:10px 11px;
+    border:1px solid #ecdcc8;border-radius:11px;background:#fff;color:#4a3f36;
+    font-family:inherit;font-size:16px;line-height:1.65;resize:vertical;
+  }
+  .medit-box .mdta:focus{outline:0;border-color:#e8743b;box-shadow:0 0 0 3px rgba(232,116,59,.13)}
+  .medit-box .mdtip{margin:6px 1px 0;font-size:11px;color:#a48d79;font-weight:600;line-height:1.5}
+  .medit-box .mdbtns{display:flex;gap:7px;margin-top:8px;align-items:center}
+  .medit-box .mdbtns button{min-height:42px;padding:0 12px;border-radius:11px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
+  .medit-box .mdsave{flex:1;border:0;background:#e8743b;color:#fff}
+  .medit-box .mdcancel{flex:1;border:1px solid #ecd9c4;background:#fffaf3;color:#a4785a}
+  .medit-box .mdreset{flex:none;border:0;background:transparent;color:#b08d6c;font-size:11.5px;text-decoration:underline;padding:0 4px}
+
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 3px}
   .chip{font-size:12px;font-weight:700;color:#bd6a33;background:#fdf0e2;border-radius:99px;padding:6px 11px;line-height:1.1}
 
@@ -954,14 +989,23 @@
 
       <div class="pbox prog-wrap">
         <div class="prow">
-          <span class="ptxt">장보기 체크 <b class="prog-n">0 / 0</b></span>
+          <span class="ptxt">이번 주 체크 <b class="prog-n">0 / 0</b></span>
           <span class="ptxt prog-pct">0%</span>
         </div>
         <div class="prog"><i></i></div>
       </div>
 
-      <div class="day">
-        <div class="day-h"><span class="d">월</span>11/16</div>
+      <p class="note" style="margin:-3px 2px 10px;word-break:keep-all">요일을 체크하면 그날 식단이 지워져요 · [수정]으로 메뉴를 고칠 수 있어요</p>
+
+      <div class="day" data-day="mon">
+        <div class="day-h">
+          <label class="item-row day-row">
+            <input type="checkbox" class="item" data-k="menu-mon">
+            <span class="box"></span>
+            <span class="txt"><span class="d">월</span>11/16</span>
+          </label>
+          <button type="button" class="medit" data-edit="mon">수정</button>
+        </div>
         <div class="rows">
           <div class="row"><span class="k">밥·국</span><span class="v">흰쌀밥 · 소고기무국</span></div>
           <div class="row"><span class="k">메인</span><span class="v">제육볶음<i class="h">집</i></span></div>
@@ -972,8 +1016,15 @@
         </div>
       </div>
 
-      <div class="day today">
-        <div class="day-h"><span class="d">화</span>11/17<span class="b">오늘</span></div>
+      <div class="day today" data-day="tue">
+        <div class="day-h">
+          <label class="item-row day-row">
+            <input type="checkbox" class="item" data-k="menu-tue">
+            <span class="box"></span>
+            <span class="txt"><span class="d">화</span>11/17<span class="b">오늘</span></span>
+          </label>
+          <button type="button" class="medit" data-edit="tue">수정</button>
+        </div>
         <div class="rows">
           <div class="row"><span class="k">밥·국</span><span class="v">흰쌀밥 · 꽃게미역국</span></div>
           <div class="row"><span class="k">메인</span><span class="v">삼겹살구이<i class="h">집</i></span></div>
@@ -984,8 +1035,15 @@
         </div>
       </div>
 
-      <div class="day">
-        <div class="day-h"><span class="d">수</span>11/18</div>
+      <div class="day" data-day="wed">
+        <div class="day-h">
+          <label class="item-row day-row">
+            <input type="checkbox" class="item" data-k="menu-wed">
+            <span class="box"></span>
+            <span class="txt"><span class="d">수</span>11/18</span>
+          </label>
+          <button type="button" class="medit" data-edit="wed">수정</button>
+        </div>
         <div class="rows">
           <div class="row"><span class="k">밥·국</span><span class="v">흰쌀밥 · 두부된장국<i class="h">집</i></span></div>
           <div class="row"><span class="k">메인</span><span class="v">훈제오리구이</span></div>
@@ -996,8 +1054,15 @@
         </div>
       </div>
 
-      <div class="day">
-        <div class="day-h"><span class="d">목</span>11/19</div>
+      <div class="day" data-day="thu">
+        <div class="day-h">
+          <label class="item-row day-row">
+            <input type="checkbox" class="item" data-k="menu-thu">
+            <span class="box"></span>
+            <span class="txt"><span class="d">목</span>11/19</span>
+          </label>
+          <button type="button" class="medit" data-edit="thu">수정</button>
+        </div>
         <div class="rows">
           <div class="row"><span class="k">밥·국</span><span class="v">흰쌀밥 · 황태북엇국<i class="h">집</i></span></div>
           <div class="row"><span class="k">메인</span><span class="v">소불고기</span></div>
@@ -1008,8 +1073,15 @@
         </div>
       </div>
 
-      <div class="day">
-        <div class="day-h"><span class="d">금</span>11/20</div>
+      <div class="day" data-day="fri">
+        <div class="day-h">
+          <label class="item-row day-row">
+            <input type="checkbox" class="item" data-k="menu-fri">
+            <span class="box"></span>
+            <span class="txt"><span class="d">금</span>11/20</span>
+          </label>
+          <button type="button" class="medit" data-edit="fri">수정</button>
+        </div>
         <div class="rows">
           <div class="row"><span class="k">밥·국</span><span class="v">흰쌀밥 · 돼지감자찌개<i class="h">집</i></span></div>
           <div class="row"><span class="k">메인</span><span class="v">순살고등어구이</span></div>
@@ -1019,8 +1091,15 @@
         </div>
       </div>
 
-      <div class="day">
-        <div class="day-h"><span class="d">토</span>11/21</div>
+      <div class="day" data-day="sat">
+        <div class="day-h">
+          <label class="item-row day-row">
+            <input type="checkbox" class="item" data-k="menu-sat">
+            <span class="box"></span>
+            <span class="txt"><span class="d">토</span>11/21</span>
+          </label>
+          <button type="button" class="medit" data-edit="sat">수정</button>
+        </div>
         <div class="rows">
           <div class="row"><span class="k">밥·국</span><span class="v">흰쌀밥 · 소고기미역국</span></div>
           <div class="row"><span class="k">메인</span><span class="v">간장찜닭</span></div>
@@ -1273,7 +1352,7 @@
   try { root.className += " js-on"; } catch (e) {}
 
   var KEY = "biumlog-checks-v1";
-  var store = { items: {}, extra: [], tab: "" };
+  var store = { items: {}, extra: [], tab: "", menus: {} };
   var canStore = false;
 
   /* 저장소 확인 (막혀 있어도 화면은 그대로 동작) */
@@ -1288,6 +1367,7 @@
         store.items = p.items || {};
         store.extra = p.extra || [];
         store.tab = p.tab || "";
+        store.menus = (p.menus && typeof p.menus === "object") ? p.menus : {};
       }
     }
   } catch (e) { canStore = false; }
@@ -1307,6 +1387,9 @@
   }
 
   function keyOf(inp) {
+    var dk = "";
+    try { dk = inp.getAttribute("data-k") || ""; } catch (e) { dk = ""; }
+    if (dk) return "i|" + dk;
     return "i|" + rowLabel(inp).slice(0, 80);
   }
 
@@ -1438,6 +1521,191 @@
       });
     } catch (e) {}
   }
+
+  /* ===== 이번 주 식단: 요일 체크(지우기) + 메뉴 직접 고치기 ===== */
+  var dayNodes = [];
+  var origRows = {};
+  try {
+    each(document.querySelectorAll(".day[data-day]"), function (day) {
+      var id = day.getAttribute("data-day");
+      var rows = day.querySelector(".rows");
+      dayNodes.push(day);
+      if (id && rows) origRows[id] = rows.innerHTML;
+    });
+  } catch (e) {}
+
+  /* 행 → 편집용 글(집 배지는 (집)) */
+  function rowsToText(rowsEl) {
+    var out = [];
+    if (!rowsEl) return "";
+    each(rowsEl.querySelectorAll(".row"), function (r) {
+      var kEl = r.querySelector(".k"), vEl = r.querySelector(".v");
+      var k = kEl ? (kEl.textContent || "").replace(/\s+/g, " ").trim() : "";
+      var v = "";
+      if (vEl) {
+        var c = vEl.cloneNode(true);
+        each(c.querySelectorAll("i.h"), function (b) {
+          if (b.parentNode) b.parentNode.replaceChild(document.createTextNode("(집)"), b);
+        });
+        v = (c.textContent || "").replace(/\s+/g, " ").trim();
+      }
+      if (!k && !v) return;
+      out.push(k ? k + ": " + v : v);
+    });
+    return out.join("\n");
+  }
+
+  /* 글 → 행 ("(집)"은 다시 집 배지로) */
+  function fillRows(rowsEl, text) {
+    if (!rowsEl) return;
+    while (rowsEl.firstChild) rowsEl.removeChild(rowsEl.firstChild);
+    var lines = String(text || "").split(/\r?\n/);
+    each(lines, function (line) {
+      var s = line.replace(/^\s+/, "").replace(/\s+$/, "");
+      if (!s) return;
+      var k = "", v = s;
+      var m = s.match(/^([^:：]{1,12})[:：]\s*([\s\S]*)$/);
+      if (m) { k = m[1].replace(/\s+$/, ""); v = m[2]; }
+      var row = document.createElement("div");
+      row.className = "row";
+      if (k) {
+        var ks = document.createElement("span");
+        ks.className = "k";
+        ks.textContent = k;
+        row.appendChild(ks);
+      }
+      var vs = document.createElement("span");
+      vs.className = "v";
+      var parts = String(v).split(/\(집\)|\[집\]/);
+      var i;
+      for (i = 0; i < parts.length; i++) {
+        if (i > 0) {
+          var b = document.createElement("i");
+          b.className = "h";
+          b.textContent = "집";
+          vs.appendChild(b);
+        }
+        if (parts[i]) vs.appendChild(document.createTextNode(parts[i]));
+      }
+      row.appendChild(vs);
+      rowsEl.appendChild(row);
+    });
+  }
+
+  function setDayClass(day, cls, on) {
+    if (!day) return;
+    var cur = String(day.className || "");
+    var has = cur.indexOf(cls) >= 0;
+    if (on && !has) { day.className = (cur ? cur + " " : "") + cls; return; }
+    if (!on && has) {
+      cur = cur.replace(new RegExp("(^|\\s)" + cls + "(?=\\s|$)"), " ");
+      day.className = cur.replace(/\s+/g, " ").replace(/^ | $/g, "");
+    }
+  }
+
+  function syncDone() {
+    each(dayNodes, function (day) {
+      var box = day.querySelector(".day-h input.item");
+      setDayClass(day, "done", !!(box && box.checked));
+    });
+  }
+
+  function closeEditors() {
+    each(dayNodes, function (day) {
+      var box = day.querySelector(".medit-box");
+      if (box && box.parentNode) box.parentNode.removeChild(box);
+      setDayClass(day, "editing", false);
+    });
+  }
+
+  function restoreDay(day, id) {
+    try {
+      if (store.menus && store.menus[id]) { delete store.menus[id]; save(); }
+      var rowsEl = day.querySelector(".rows");
+      if (rowsEl && origRows[id]) rowsEl.innerHTML = origRows[id];
+    } catch (e) {}
+    closeEditors();
+  }
+
+  function openEditor(day) {
+    var id = day.getAttribute("data-day");
+    if (!id) return;
+    if (day.querySelector(".medit-box")) { closeEditors(); return; }
+    closeEditors();
+    var rowsEl = day.querySelector(".rows");
+    var box = document.createElement("div");
+    box.className = "medit-box";
+    var ta = document.createElement("textarea");
+    ta.className = "mdta";
+    ta.rows = 6;
+    ta.spellcheck = false;
+    ta.value = rowsToText(rowsEl);
+    var tip = document.createElement("p");
+    tip.className = "mdtip";
+    tip.textContent = "한 줄에 하나씩 '항목: 메뉴' 순서로 적으면 돼요. (집)을 붙이면 '집' 표시가 생겨요.";
+    var btns = document.createElement("div");
+    btns.className = "mdbtns";
+    var saveB = document.createElement("button");
+    saveB.type = "button"; saveB.className = "mdsave"; saveB.textContent = "저장";
+    var cancelB = document.createElement("button");
+    cancelB.type = "button"; cancelB.className = "mdcancel"; cancelB.textContent = "취소";
+    var resetB = document.createElement("button");
+    resetB.type = "button"; resetB.className = "mdreset"; resetB.textContent = "처음대로";
+    btns.appendChild(saveB);
+    btns.appendChild(cancelB);
+    btns.appendChild(resetB);
+    box.appendChild(ta);
+    box.appendChild(tip);
+    box.appendChild(btns);
+    day.appendChild(box);
+    setDayClass(day, "editing", true);
+    try { ta.focus(); } catch (e) {}
+
+    saveB.addEventListener("click", function () {
+      var t = String(ta.value || "").replace(/^\s+|\s+$/g, "");
+      if (!t) { restoreDay(day, id); return; }
+      if (!store.menus) store.menus = {};
+      store.menus[id] = t;
+      save();
+      fillRows(rowsEl, t);
+      closeEditors();
+    });
+    cancelB.addEventListener("click", function () { closeEditors(); });
+    resetB.addEventListener("click", function () { restoreDay(day, id); });
+  }
+
+  /* 저장된 메뉴 복원 */
+  try {
+    each(dayNodes, function (day) {
+      var id = day.getAttribute("data-day");
+      var t = store.menus ? store.menus[id] : "";
+      if (typeof t === "string" && t) fillRows(day.querySelector(".rows"), t);
+    });
+  } catch (e) {}
+
+  /* 수정 버튼 · 체크 상태 반영 */
+  try {
+    document.addEventListener("click", function (ev) {
+      var t = ev.target;
+      while (t && t !== document) {
+        if (t.nodeType === 1 && t.tagName === "BUTTON" && t.getAttribute("data-edit")) break;
+        t = t.parentNode;
+      }
+      if (!t || t === document) return;
+      var day = t.parentNode;
+      while (day && day !== document && !(day.nodeType === 1 && day.getAttribute && day.getAttribute("data-day"))) day = day.parentNode;
+      if (!day || day === document) return;
+      ev.preventDefault();
+      openEditor(day);
+    });
+    document.addEventListener("change", function (ev) {
+      var t = ev.target;
+      if (t && typeof t.className === "string" && t.className.indexOf("item") >= 0) syncDone();
+    });
+    if (resetBtn) resetBtn.addEventListener("click", function () { setTimeout(syncDone, 0); });
+  } catch (e) {}
+
+  syncDone();
 
   update();
 })();
