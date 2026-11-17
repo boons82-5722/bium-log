@@ -463,7 +463,7 @@
   .addbox .submitbtn{flex:1;min-height:46px;border:0;border-radius:12px;background:#e8743b;color:#fff;
     -webkit-appearance:none;appearance:none;
     font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer}
-  .addbox .submitbtn[disabled]{background:#dfc7b3}
+  .addbox .submitbtn[disabled]{background:#dfc7b3;font-size:12.5px;letter-spacing:-.2px;cursor:default}
   .addbox .addmsg{margin:7px 0 0;font-size:11.5px;font-weight:700;color:#b4551f;line-height:1.45}
   .addbox .addmsg:empty{display:none}
   .addbox .addmsg.ok{color:#3f7d4e}
@@ -2617,6 +2617,7 @@
   /* 올리기 버튼 이름을 고른 날짜에 맞춰 바꿈 (다른 날짜면 "11/9에 올리기") */
   function syncSubmit(form) {
     if (!form) return;
+    if (form.getAttribute("data-ai-busy")) return;   /* AI가 세는 동안은 버튼 문구를 그대로 둔다 */
     var b = qs(".submitbtn", form), d = qs(".phdate", form);
     if (!b) return;
     var ds = (d && d.value) ? d.value : (form.getAttribute("data-date") || selDate);
@@ -3143,6 +3144,7 @@
       }
       if (!hasClass(form, "addbox")) return;
       ev.preventDefault();
+      if (form.getAttribute("data-ai-busy")) { flash("🤖 AI가 아직 날짜·개수를 세는 중이에요 · 잠깐만 기다려 주세요"); return; }
       try { handleAdd(form); } catch (e) { flash("올리지 못했어요. 다시 해 주세요."); }
     });
   } catch (e) {}
@@ -3332,15 +3334,77 @@
     return { date: ds, count: (c > 0) ? c : 0, items: String(o.items || "").slice(0, 40) };
   }
 
+  /* Gemini 모델: 2.5-flash 우선, 400/404면 3.5-flash-lite로 한 번만 더
+     (2.0-flash는 2026-06-01 서비스 종료 — 죽은 모델로는 폴백하지 않는다. 3.5-flash-lite는 2.5-flash의 공식 대체 모델) */
+  var GEM_MODEL = "gemini-2.5-flash", GEM_MODEL_ALT = "gemini-3.5-flash-lite";
+
+  /* 2.5 계열은 thinking을 꺼서(thinkingBudget: 0) 1~2초 안에 JSON이 오게 한다.
+     3.x 계열은 thinkingLevel 체계라 여기서는 건드리지 않는다(flash-lite 기본값이 minimal). */
+  function geminiBody(b64, model) {
+    var gen = { responseMimeType: "application/json", temperature: 0.1 };
+    if (/^gemini-2\.5/.test(model)) gen.thinkingConfig = { thinkingBudget: 0 };
+    return {
+      contents: [{ parts: [
+        { text: AI_PROMPT },
+        { inline_data: { mime_type: "image/jpeg", data: b64 } }
+      ] }],
+      generationConfig: gen
+    };
+  }
+
   function aiRequest(dataUrl, cfg, cb) {
-    var done = false;
-    function fin(res, err) { if (done) return; done = true; clearTimeout(timer); cb(res, err || ""); }
-    var url = "", opts = null, body = null, b64 = String(dataUrl).split(",")[1] || "";
+    var done = false, aborted = false, ctl = null, timer = null;
+    function fin(res, err) {
+      if (done) return;
+      done = true;
+      try { clearTimeout(timer); } catch (e) {}
+      cb(res, err || "");
+    }
+    var b64 = String(dataUrl).split(",")[1] || "";
     if (!b64) { cb(null, "img"); return; }
+
+    /* 한 번 호출. 실패(HTTP 오류)는 onFail(status)로 넘겨 폴백 판단을 맡긴다. */
+    function call(url, body, bearer, onFail) {
+      var opts = { method: "POST", body: JSON.stringify(body),
+                   headers: { "Content-Type": "application/json" } };
+      if (bearer) opts.headers.Authorization = "Bearer " + cfg.key;
+      try { if (window.AbortController) { ctl = new AbortController(); opts.signal = ctl.signal; } } catch (e) { ctl = null; }
+      try { clearTimeout(timer); } catch (e) {}
+      timer = setTimeout(function () { aborted = true; try { if (ctl) ctl.abort(); } catch (e) {} }, 25000);
+      try {
+        fetch(url, opts).then(function (r) {
+          return r.text().then(function (txt) { return { ok: r.ok, status: r.status, txt: txt }; });
+        }).then(function (rr) {
+          if (!rr.ok) { onFail(rr.status); return; }
+          var data = null;
+          try { data = JSON.parse(rr.txt); } catch (e) { data = null; }
+          if (!data) { fin(null, "json"); return; }
+          var raw = "", i;
+          if (bearer) {
+            raw = String(((((data.choices || [])[0] || {}).message) || {}).content || "");
+          } else {
+            var parts = ((((data.candidates || [])[0] || {}).content) || {}).parts || [];
+            for (i = 0; i < parts.length; i++) { if (parts[i] && parts[i].text) raw += parts[i].text; }
+          }
+          var res = aiParse(raw);
+          if (!res) { fin(null, "parse"); return; }
+          fin(res, "");
+        })["catch"](function () { fin(null, aborted ? "timeout" : "net"); });
+      } catch (e) { fin(null, "net"); }
+    }
+
+    function gemini(model, isRetry) {
+      var url = "https://generativelanguage.googleapis.com/v1beta/models/" + model +
+                ":generateContent?key=" + encodeURIComponent(cfg.key);
+      call(url, geminiBody(b64, model), false, function (status) {
+        if (!isRetry && model === GEM_MODEL && (status === 400 || status === 404)) { gemini(GEM_MODEL_ALT, true); return; }
+        fin(null, "http" + status);
+      });
+    }
+
     try {
       if (cfg.provider === "openai") {
-        url = "https://api.openai.com/v1/chat/completions";
-        body = {
+        call("https://api.openai.com/v1/chat/completions", {
           model: "gpt-4o-mini",
           response_format: { type: "json_object" },
           messages: [
@@ -3350,63 +3414,79 @@
               { type: "image_url", image_url: { url: dataUrl } }
             ] }
           ]
-        };
-        opts = { method: "POST", body: JSON.stringify(body),
-                 headers: { "Content-Type": "application/json", "Authorization": "Bearer " + cfg.key } };
+        }, true, function (status) { fin(null, "http" + status); });
       } else {
-        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
-              encodeURIComponent(cfg.key);
-        body = {
-          contents: [{ parts: [
-            { text: AI_PROMPT },
-            { inline_data: { mime_type: "image/jpeg", data: b64 } }
-          ] }],
-          generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
-        };
-        opts = { method: "POST", body: JSON.stringify(body),
-                 headers: { "Content-Type": "application/json" } };
+        gemini(GEM_MODEL, false);
       }
-    } catch (e) { cb(null, "build"); return; }
+    } catch (e) { fin(null, "build"); }
+  }
 
-    var ctl = null;
-    try { if (window.AbortController) { ctl = new AbortController(); opts.signal = ctl.signal; } } catch (e) { ctl = null; }
-    var timer = setTimeout(function () { try { if (ctl) ctl.abort(); } catch (e) {} }, 45000);
+  /* 실패 원인을 바로 알 수 있게: 코드 + 짧은 한국어 힌트 */
+  function aiErrLabel(code) {
+    var c = String(code || "err"), hint = "";
+    if (c === "http400") hint = " · 키나 모델";
+    else if (c === "http401") hint = " · 키 확인";
+    else if (c === "http403") hint = " · 키 권한/차단";
+    else if (c === "http404") hint = " · 모델 없음";
+    else if (c === "http429") hint = " · 무료 한도 초과";
+    else if (c === "timeout") hint = " · 응답 없음";
+    else if (c === "net") hint = " · 네트워크";
+    else if (c === "parse") hint = " · 답 형식";
+    else if (c === "img") hint = " · 사진 변환";
+    return c + hint;
+  }
 
-    try {
-      fetch(url, opts).then(function (r) {
-        return r.text().then(function (txt) { return { ok: r.ok, status: r.status, txt: txt }; });
-      }).then(function (rr) {
-        if (!rr.ok) { fin(null, "http" + rr.status); return; }
-        var data = null;
-        try { data = JSON.parse(rr.txt); } catch (e) { data = null; }
-        if (!data) { fin(null, "json"); return; }
-        var raw = "";
-        if (cfg.provider === "openai") {
-          var ch0 = (data.choices || [])[0] || {};
-          raw = String((ch0.message || {}).content || "");
-        } else {
-          var cand = (data.candidates || [])[0] || {};
-          var parts = ((cand.content || {}).parts || []), i;
-          for (i = 0; i < parts.length; i++) { if (parts[i] && parts[i].text) raw += parts[i].text; }
-        }
-        var res = aiParse(raw);
-        if (!res) { fin(null, "parse"); return; }
-        fin(res, "");
-      })["catch"](function () { fin(null, "net"); });
-    } catch (e) { fin(null, "net"); }
+  /* AI가 세는 동안 올리기 버튼을 잠근다 (1개로 먼저 올라가는 것 방지) */
+  function aiLockOn(form) {
+    if (!form) return;
+    var b = qs(".submitbtn", form);
+    form.setAttribute("data-ai-busy", "1");
+    if (!b) return;
+    b.disabled = true;
+    b.textContent = "🤖 AI가 날짜·개수 세는 중...";
+  }
+  function aiLockOff(form) {
+    if (!form) return;
+    form.removeAttribute("data-ai-busy");
+    var b = qs(".submitbtn", form);
+    if (b) b.disabled = false;
+    syncSubmit(form);   /* 원래 문구("올리기" / "MM/DD에 올리기")로 복원 */
   }
 
   /* 사진을 고르면: 키가 있으면 AI로 날짜·품목·개수 채우기 */
   function aiTryAnalyze(file, form) {
     aiFormNote(form, "", "");
     var cfg = aiGet();
-    if (!cfg.key || !file) return;
+    if (!cfg.key || !file) { aiLockOff(form); return; }
+    /* 같은 폼에서 사진을 다시 골랐을 때 옛 응답이 끼어들지 않게 순번을 매긴다 */
+    var seq = String((parseInt(form ? form.getAttribute("data-ai-seq") : 0, 10) || 0) + 1);
+    if (form) form.setAttribute("data-ai-seq", seq);
+    function stale() { return !!(form && form.getAttribute("data-ai-seq") !== seq); }
+
     aiFormNote(form, "🤖 AI가 사진 날짜랑 물건 개수 세는 중...", "busy");
+    aiLockOn(form);
+    /* 응답이 아예 안 와도 버튼이 잠긴 채로 남지 않게 하는 안전장치 */
+    var watchdog = setTimeout(function () {
+      if (form && form.getAttribute("data-ai-busy")) {
+        aiFormNote(form, "🤖 AI 응답이 너무 늦어요 · 날짜·개수를 직접 넣어도 그대로 저장돼요", "");
+        aiLockOff(form);
+      }
+    }, 30000);
+
     aiPrepare(file, function (dataUrl) {
-      if (!dataUrl) { aiFormNote(form, "🤖 AI 인식은 건너뛰었어요 · 직접 넣어 주세요", ""); return; }
+      if (stale()) return;
+      if (!dataUrl) {
+        clearTimeout(watchdog);
+        aiFormNote(form, "🤖 AI 인식은 건너뛰었어요 · 직접 넣어 주세요", "");
+        aiLockOff(form);
+        return;
+      }
       aiRequest(dataUrl, cfg, function (res, err) {
+        if (stale()) return;
+        clearTimeout(watchdog);
         if (err || !res) {
-          aiFormNote(form, "🤖 AI 인식이 안 됐어요 · 날짜·품목·개수를 직접 넣어도 그대로 저장돼요", "");
+          aiFormNote(form, "🤖 AI 오류(" + aiErrLabel(err) + ") · 날짜·개수를 직접 넣어도 그대로 저장돼요", "");
+          aiLockOff(form);
           return;
         }
         var bits = [];
@@ -3427,7 +3507,7 @@
         }
         var ii = form ? qs(".phname", form) : null;
         if (res.items && ii && !String(ii.value || "").replace(/^ | $/g, "")) ii.value = res.items;
-        syncSubmit(form);
+        aiLockOff(form);   /* 버튼 다시 활성화 + 날짜에 맞는 문구로 복원 */
         if (bits.length) aiFormNote(form, "🤖 AI가 " + bits.join(" · ") + "로 채웠어요 · 확인하고 [올리기]만 누르세요", "ok");
         else aiFormNote(form, "🤖 이 사진에서는 날짜·개수를 못 읽었어요 · 직접 넣어 주세요", "");
       });
