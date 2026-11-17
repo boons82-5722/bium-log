@@ -441,6 +441,29 @@
     font-size:12.5px;font-weight:700;line-height:1.4;text-align:center;
     box-shadow:0 6px 18px rgba(0,0,0,.24)}
 
+
+  /* ===== 비우기 달력: 4개월 이동 (JS) ===== */
+  .calbar{display:none;align-items:center;gap:8px;margin:7px 0 0;padding:0 2px}
+  html.cal-on .calbar{display:flex}
+  .navbtn{flex:none;display:flex;align-items:center;justify-content:center;width:36px;height:36px;
+    padding:0;border:1px solid #f0dfcc;border-radius:10px;background:#fffaf3;color:#c2551f;
+    font-family:inherit;font-size:19px;font-weight:800;line-height:1;cursor:pointer;
+    -webkit-appearance:none;appearance:none}
+  .navbtn:active{background:#fdeee0}
+  .navbtn[disabled]{opacity:.3;cursor:default;background:#fffaf3}
+  .mnow{flex:1;text-align:center;font-size:13px;font-weight:800;color:#43362c;letter-spacing:-.3px}
+  .caljs{display:none}
+  html.cal-on .caljs{display:block}
+  html.cal-on .cal-fallback{display:none}
+  .caljs .cd{font-family:inherit;padding:0;width:100%;-webkit-appearance:none;appearance:none}
+  .caljs .cd .n{margin-bottom:0}
+  .caljs .cd.today .n{margin-bottom:7px}
+  .cd .tdy{position:absolute;left:50%;bottom:2px;transform:translateX(-50%);
+    font-size:8.5px;font-weight:800;color:#e8743b;letter-spacing:-.4px;line-height:1}
+  .caljs .cd.sel{background:#e8743b;border-color:#e8743b;box-shadow:0 3px 8px rgba(232,116,59,.28)}
+  .caljs .cd.sel .n{color:#fff}
+  .caljs .cd.sel .b{background:#fff;color:#e8743b}
+  .caljs .cd.sel .tdy{color:#fff}
 </style>
 </head>
 <body>
@@ -475,7 +498,17 @@
           <h2>🗑️ 비우기 달력</h2>
           <span class="tot" id="totBadge">누적 1개</span>
         </div>
-        <p class="cal-sub">2026년 11월 · 날짜를 누르면 그날 사진이 보여요</p>
+        <div class="calbar">
+          <button type="button" class="navbtn" id="calPrev" aria-label="이전 달">‹</button>
+          <span class="mnow" id="calMonth">2026년 11월</span>
+          <button type="button" class="navbtn" id="calNext" aria-label="다음 달">›</button>
+        </div>
+        <p class="cal-sub" id="calSub">2026년 11월 · 날짜를 누르면 그날 사진이 보여요</p>
+  <div class="caljs" id="calJS">
+    <div class="grid" id="calGrid"></div>
+    <div class="dets" id="calDets"></div>
+  </div>
+  <div class="cal-fallback">
   <input type="radio" name="cal-day" id="cd1" class="calr">
   <input type="radio" name="cal-day" id="cd2" class="calr">
   <input type="radio" name="cal-day" id="cd3" class="calr">
@@ -769,6 +802,7 @@
           </div>
         </div>
         </div>
+  </div>
       </div>
 
       <div class="card" id="sumCard">
@@ -1712,20 +1746,27 @@
 </script>
 
 <script>
-/* ===== 비움로그: 날짜별 사진·기록 올리기 / 삭제 ===== */
+/* ===== 비움로그: 4개월 달력(2026.11~2027.2) · 날짜별 사진·기록 올리기 / 삭제 ===== */
 (function () {
   var root = document.documentElement;
   try { if (root.className.indexOf("js-on") < 0) root.className += " js-on"; } catch (e) {}
 
-  var YEAR = 2026, MONTH = 10, DAYS = 30;          /* 2026년 11월 (MONTH는 0부터) */
-  var MONTH_TXT = "11월";
+  /* 비우기 4개월: 2026-11(30일) · 2026-12(31일) · 2027-01(31일) · 2027-02(28일) */
+  var MONTHS = [
+    { y: 2026, m: 10, n: 30, key: "2026-11", label: "2026년 11월" },
+    { y: 2026, m: 11, n: 31, key: "2026-12", label: "2026년 12월" },
+    { y: 2027, m: 0,  n: 31, key: "2027-01", label: "2027년 1월" },
+    { y: 2027, m: 1,  n: 28, key: "2027-02", label: "2027년 2월" }
+  ];
+  var LAST_KEY = MONTHS[MONTHS.length - 1].key;
   var DB_NAME = "biumlog-db", STORE_NAME = "records", LS_KEY = "biumlog-records-v1";
   var SEED_ID = "seed-r17";
-  var SEED = { id: SEED_ID, day: 17, item: "TV 리모컨", qty: 1, time: "23:30",
-               ts: "2026-11-17T23:30:00+09:00", photo: "", seed: true };
+  var SEED = { id: SEED_ID, date: "2026-11-17", day: 17, item: "TV 리모컨", qty: 1,
+               time: "23:30", ts: "2026-11-17T23:30:00+09:00", photo: "", seed: true };
 
   var db = null, lsOnly = false;
-  var map = {};                                     /* id -> 기록(삭제 표시 포함) */
+  var map = {};                    /* id -> 기록 (삭제 표시 포함) */
+  var curIdx = 0, selDate = "", addOpen = false;
 
   /* ---------- 작은 도구 ---------- */
   function qs(sel, ctx) {
@@ -1737,6 +1778,7 @@
     for (i = 0; i < list.length; i++) out.push(list[i]);
     return out;
   }
+  function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
   function pad2(n) { return (n < 10 ? "0" : "") + n; }
   function parentByClass(el, cls) {
     var n = el ? el.parentNode : null;
@@ -1771,14 +1813,47 @@
     return String(s === null || s === undefined ? "" : s)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
-  function weekdayKo(day) {
-    try { return ["일", "월", "화", "수", "목", "금", "토"][new Date(YEAR, MONTH, day).getDay()] || ""; }
-    catch (e) { return ""; }
-  }
-  function todayDay() {
+
+  /* ---------- 날짜 도구 (YYYY-MM-DD 문자열 기준) ---------- */
+  function mkDate(y, m, d) { return y + "-" + pad2(m + 1) + "-" + pad2(d); }
+  function todayStr() {
     var d = new Date();
-    if (d.getFullYear() === YEAR && d.getMonth() === MONTH) return d.getDate();
-    return 17;
+    return mkDate(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  function monthOf(ds) {                       /* 그 달이 4개월 안이면 인덱스, 아니면 -1 */
+    var k = String(ds || "").slice(0, 7), i;
+    for (i = 0; i < MONTHS.length; i++) { if (MONTHS[i].key === k) return i; }
+    return -1;
+  }
+  function weekdayKo(ds) {
+    try {
+      var p = String(ds).split("-");
+      return ["일", "월", "화", "수", "목", "금", "토"][new Date(+p[0], (+p[1]) - 1, +p[2]).getDay()] || "";
+    } catch (e) { return ""; }
+  }
+  function dateLabel(ds) {                     /* "11월 17일 (화)" */
+    var p = String(ds).split("-");
+    if (p.length !== 3) return "";
+    return parseInt(p[1], 10) + "월 " + parseInt(p[2], 10) + "일 (" + weekdayKo(ds) + ")";
+  }
+  function shortDate(ds) {                     /* "11/17" */
+    var p = String(ds).split("-");
+    if (p.length !== 3) return "";
+    return parseInt(p[1], 10) + "/" + parseInt(p[2], 10);
+  }
+  function dateOf(r) {                         /* 기록 → 날짜 (예전 day-only 기록도 살림) */
+    if (!r) return "";
+    var d = String(r.date || "");
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+    var ts = String(r.ts || ""), m = ts.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return m[1] + "-" + m[2] + "-" + m[3];
+    if (r.day >= 1 && r.day <= 31) return mkDate(2026, 10, parseInt(r.day, 10));
+    return "";
+  }
+  function defaultSel(i) {
+    var mo = MONTHS[i], t = todayStr();
+    if (t.slice(0, 7) === mo.key) return t;
+    return mkDate(mo.y, mo.m, 1);
   }
 
   /* ---------- 저장 (IndexedDB → 막히면 localStorage) ---------- */
@@ -1815,7 +1890,7 @@
       if (raw) {
         obj = JSON.parse(raw);
         if (obj && typeof obj === "object") {
-          for (k in obj) { if (Object.prototype.hasOwnProperty.call(obj, k)) out.push(obj[k]); }
+          for (k in obj) { if (own(obj, k)) out.push(obj[k]); }
         }
       }
     } catch (e) {}
@@ -1863,46 +1938,49 @@
   }
 
   /* ---------- 데이터 ---------- */
-  function isActive(r) { return !!r && !r.deleted && r.day >= 1 && r.day <= DAYS; }
-  function dayList(day) {
-    var out = [], k;
+  function isActive(r) { return !!r && !r.deleted && monthOf(dateOf(r)) >= 0; }
+  function seedGone() { return !!(map[SEED_ID] && map[SEED_ID].deleted); }
+
+  function listFor(ds) {
+    var out = [], k, r;
     for (k in map) {
-      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
-      if (isActive(map[k]) && map[k].day === day) out.push(map[k]);
+      if (!own(map, k)) continue;
+      r = map[k];
+      if (r && !r.deleted && r.id !== SEED_ID && dateOf(r) === ds) out.push(r);
     }
+    if (ds === SEED.date && !seedGone()) out.push(SEED);
     out.sort(function (a, b) { return a.ts < b.ts ? -1 : (a.ts > b.ts ? 1 : 0); });
     return out;
   }
-  function seedGone() { return !!(map[SEED_ID] && map[SEED_ID].deleted); }
-  function activeList() {
-    var out = [], k;
+
+  function activeList() {                       /* 4개월 전체 기록 (최근 순) */
+    var out = [], k, r;
     for (k in map) {
-      if (!Object.prototype.hasOwnProperty.call(map, k)) continue;
-      if (isActive(map[k])) out.push(map[k]);
+      if (!own(map, k)) continue;
+      r = map[k];
+      if (isActive(r) && r.id !== SEED_ID) out.push(r);
     }
     if (!seedGone()) out.push(SEED);
     out.sort(function (a, b) { return a.ts < b.ts ? 1 : (a.ts > b.ts ? -1 : 0); });
     return out;
   }
+
   function qtySum(list) {
     var s = 0, i;
-    for (i = 0; i < list.length; i++) s += (parseInt(list[i].qty, 10) || 1);
+    for (i = 0; i < list.length; i++) { s += (parseInt(list[i].qty, 10) || 1); }
     return s;
   }
-  function dayQty(day) {
-    var q = qtySum(dayList(day));
-    if (day === 17 && !seedGone()) q += (parseInt(SEED.qty, 10) || 1);
-    return q;
-  }
+  function dateQty(ds) { return qtySum(listFor(ds)); }
 
   /* ---------- 그리기 ---------- */
   function recCard(r) {
     var q = parseInt(r.qty, 10) || 1;
+    var ds = dateOf(r);
     var h = '<div class="rec-item" data-rec="' + esc(r.id) + '">';
-    h += '<div class="det-h"><span class="dt">' + MONTH_TXT + " " + r.day + "일 (" + weekdayKo(r.day) + ')</span>';
+    h += '<div class="det-h"><span class="dt">' + dateLabel(ds) + '</span>';
     h += '<span class="db">' + q + '개 비움</span>';
     h += '<button type="button" class="del" data-del="' + esc(r.id) + '">삭제</button></div>';
-    if (r.photo) h += '<img class="ph" src="' + r.photo + '" alt="' + MONTH_TXT + " " + r.day + '일 비운 물건 사진">';
+    if (r.photo) h += '<img class="ph" src="' + r.photo + '" alt="' + dateLabel(ds) + ' 비운 물건 사진">';
     h += '<div class="kv2"><span class="k">품목</span><span class="v">' + esc(r.item) + '</span></div>';
     h += '<div class="kv2"><span class="k">개수</span><span class="v">' + q + '개</span></div>';
     h += '<div class="kv2"><span class="k">시각</span><span class="v">' + esc(r.time) + '</span></div>';
@@ -1910,58 +1988,82 @@
     return h;
   }
 
-  function renderDays() {
-    var day, i, box, det, list, h, empty;
-    for (day = 1; day <= DAYS; day++) {
-      box = qs('.recs[data-day="' + day + '"]');
-      if (!box) continue;
-      list = dayList(day);
-      h = "";
-      for (i = 0; i < list.length; i++) h += recCard(list[i]);
-      box.innerHTML = h;
-      det = parentByClass(box, "det-b");
-      empty = det ? qs(".empty", det) : null;
-      if (empty) empty.style.display = dayQty(day) ? "none" : "block";
+  function renderGrid() {
+    var g = qs("#calGrid");
+    if (!g) return;
+    var mo = MONTHS[curIdx];
+    var today = todayStr();
+    var h = '<span class="dw sun">일</span><span class="dw">월</span><span class="dw">화</span>' +
+            '<span class="dw">수</span><span class="dw">목</span><span class="dw">금</span>' +
+            '<span class="dw sat">토</span>';
+    var lead = new Date(mo.y, mo.m, 1).getDay();
+    var b, d, ds, q, cls;
+    for (b = 0; b < lead; b++) h += '<span class="cd blank"></span>';
+    for (d = 1; d <= mo.n; d++) {
+      ds = mkDate(mo.y, mo.m, d);
+      q = dateQty(ds);
+      cls = "cd";
+      if (q > 0) cls += " has";
+      if (ds === today) cls += " today";
+      if (ds === selDate) cls += " sel";
+      h += '<button type="button" class="' + cls + '" data-calday="' + ds + '"' +
+           ' aria-label="' + mo.label + " " + d + "일 " + (q ? q + "개" : "기록 없음") + '"' +
+           (ds === selDate ? ' aria-pressed="true"' : '') + '>';
+      h += '<span class="n">' + d + '</span>';
+      if (q > 0) h += '<span class="b">' + q + '</span>';
+      if (ds === today) h += '<span class="tdy">오늘</span>';
+      h += '</button>';
     }
-    var seedBox = document.getElementById("seedRec");
-    if (seedBox) {
-      seedBox.style.display = seedGone() ? "none" : "block";
-      if (!seedGone() && !qs('[data-del="' + SEED_ID + '"]', seedBox)) {
-        var dh = qs(".det-h", seedBox);
-        if (dh) {
-          var b = document.createElement("button");
-          b.type = "button";
-          b.className = "del";
-          b.setAttribute("data-del", SEED_ID);
-          b.textContent = "삭제";
-          dh.appendChild(b);
-        }
-      }
-    }
+    var cells = lead + mo.n;
+    var tail = (7 - (cells % 7)) % 7;
+    for (b = 0; b < tail; b++) h += '<span class="cd blank"></span>';
+    g.innerHTML = h;
   }
 
-  function renderCalendar() {
-    var day, lab, b, q;
-    for (day = 1; day <= DAYS; day++) {
-      lab = qs('.grid label[for="cd' + day + '"]');
-      if (!lab) continue;
-      q = dayQty(day);
-      b = qs(".b", lab);
-      if (q > 0) {
-        setClass(lab, "has", true);
-        if (!b) {
-          b = document.createElement("span");
-          b.className = "b";
-          lab.appendChild(b);
-        }
-        b.style.display = "";
-        b.textContent = String(q);
-        lab.setAttribute("aria-label", MONTH_TXT + " " + day + "일 " + q + "개");
-      } else {
-        setClass(lab, "has", false);
-        if (b) { b.textContent = ""; b.style.display = "none"; }
-        lab.setAttribute("aria-label", MONTH_TXT + " " + day + "일 기록 없음");
-      }
+  function addUI(ds) {
+    var uid = "d" + String(ds).replace(/-/g, "");
+    return '<div class="addwrap">' +
+        '<button type="button" class="openAdd" aria-expanded="false" data-open="' + ds + '">＋ 사진·기록 올리기</button>' +
+        '<form class="addbox" hidden data-date="' + ds + '" autocomplete="off">' +
+          '<label class="filepick" for="file-' + uid + '">' +
+            '<span class="fpick">📷 사진 선택</span>' +
+            '<span class="fname">선택 안 함</span>' +
+            '<input type="file" id="file-' + uid + '" class="phfile" accept="image/*">' +
+          '</label>' +
+          '<div class="addrow">' +
+            '<input type="text" id="item-' + uid + '" class="phname" maxlength="40" placeholder="품목명 (예: 안 쓰는 믹서기)">' +
+            '<span class="qtylab">개수</span>' +
+            '<input type="number" id="qty-' + uid + '" class="phqty" min="1" max="99" step="1" value="1" inputmode="numeric" aria-label="개수">' +
+          '</div>' +
+          '<div class="submitrow"><button type="submit" class="submitbtn">올리기</button></div>' +
+          '<p class="addmsg" role="status"></p>' +
+        '</form>' +
+      '</div>';
+  }
+
+  function renderDet() {
+    var box = qs("#calDets");
+    if (!box) return;
+    if (!selDate) {
+      box.innerHTML = '<div class="det-b"><p class="empty">날짜를 눌러 주세요.</p></div>';
+      return;
+    }
+    var list = listFor(selDate), q = qtySum(list), h = "", i;
+    h += '<div class="det-b" data-date="' + selDate + '">';
+    h += '<div class="det-h"><span class="dt">' + dateLabel(selDate) + '</span>';
+    if (q > 0) h += '<span class="db">' + q + '개 비움</span>';
+    h += '</div>';
+    h += '<div class="recs" data-date="' + selDate + '">';
+    for (i = 0; i < list.length; i++) h += recCard(list[i]);
+    h += '</div>';
+    h += '<p class="empty"' + (q ? ' style="display:none"' : '') + '>아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>';
+    h += addUI(selDate);
+    h += '</div>';
+    box.innerHTML = h;
+    if (addOpen) {
+      var f = qs(".addbox", box), b = qs(".openAdd", box);
+      if (f) f.hidden = false;
+      if (b) b.setAttribute("aria-expanded", "true");
     }
   }
 
@@ -1972,17 +2074,21 @@
     if (tot) tot.textContent = "누적 " + total + "개";
     var sumN = document.getElementById("sumN");
     if (sumN) sumN.textContent = String(total);
-    var seen = {}, days = 0, i;
+    var seen = {}, days = 0, i, ds;
     for (i = 0; i < list.length; i++) {
-      if (!seen[list[i].day]) { seen[list[i].day] = 1; days++; }
+      ds = dateOf(list[i]);
+      if (ds && !seen[ds]) { seen[ds] = 1; days++; }
     }
     var sumDays = document.getElementById("sumDays");
-    if (sumDays) sumDays.textContent = (days || 1) + "일째 · 하루 1개씩 쌓이는 중";
+    if (sumDays) sumDays.textContent = "기록한 날 " + (days || 1) + "일 · 하루 1개씩 쌓이는 중";
     var note = document.getElementById("sumNote");
     if (note) {
-      var t = dayQty(todayDay());
+      var t = todayStr();
+      var inWin = monthOf(t) >= 0;
+      var q = inWin ? dateQty(t) : 0;
       note.textContent = "2월까지 100개가 목표예요. " +
-        (t ? "오늘 " + t + "개 비웠어요." : "오늘은 아직 0개예요. 하나만 비워 볼까요?");
+        (!inWin ? "오늘 날짜는 달력 밖이에요." :
+         (q ? "오늘 " + q + "개 비웠어요." : "오늘은 아직 0개예요. 하나만 비워 볼까요?"));
     }
   }
 
@@ -1998,15 +2104,35 @@
       r = list[i];
       q = parseInt(r.qty, 10) || 1;
       h += '<div class="rec" data-rec="' + esc(r.id) + '">';
-      h += '<span class="rt">11/' + r.day + " " + esc(r.time) + '</span>';
+      h += '<span class="rt">' + shortDate(dateOf(r)) + " " + esc(r.time) + '</span>';
       h += '<span class="rn">' + esc(r.item) + " " + q + "개 · " + ((r.photo || r.seed) ? "사진 인증" : "사진 없음") + '</span>';
       h += '<button type="button" class="del" data-del="' + esc(r.id) + '">삭제</button></div>';
     }
     box.innerHTML = h;
   }
 
+  function updateHead() {
+    var mo = MONTHS[curIdx];
+    var mm = document.getElementById("calMonth");
+    if (mm) mm.textContent = mo.label;
+    var sub = document.getElementById("calSub");
+    if (sub) {
+      sub.textContent = mo.key === LAST_KEY
+        ? "이사 달이에요 · 날짜를 누르면 그날 사진이 보여요"
+        : "날짜를 누르면 그날 사진이 보여요";
+    }
+    var pv = document.getElementById("calPrev"), nx = document.getElementById("calNext");
+    if (pv) pv.disabled = curIdx <= 0;
+    if (nx) nx.disabled = curIdx >= MONTHS.length - 1;
+  }
+
   function render() {
-    try { renderDays(); renderCalendar(); renderTotals(); renderRecList(); } catch (e) {}
+    var fns = [renderGrid, renderDet, renderTotals, renderRecList, updateHead], i;
+    for (i = 0; i < fns.length; i++) { try { fns[i](); } catch (e) {} }
+    /* 달력이 실제로 그려진 뒤에만 정적 11월 폴백을 가린다 */
+    try {
+      if (qs("#calGrid .cd") && String(root.className).indexOf("cal-on") < 0) root.className += " cal-on";
+    } catch (e) {}
   }
 
   /* ---------- 안내 토스트 ---------- */
@@ -2025,65 +2151,22 @@
     } catch (e) {}
   }
 
-  /* ---------- 날짜별 [+ 사진·기록 올리기] UI 만들기 ---------- */
-  function buildAddUI() {
-    var day, box, det, wrap, btn, form, uid;
-    for (day = 1; day <= DAYS; day++) {
-      box = qs('.recs[data-day="' + day + '"]');
-      if (!box) continue;
-      det = parentByClass(box, "det-b");
-      if (!det || qs(".addwrap", det)) continue;
-      uid = "d" + day;
-
-      wrap = document.createElement("div");
-      wrap.className = "addwrap";
-
-      btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "openAdd";
-      btn.setAttribute("aria-expanded", "false");
-      btn.setAttribute("data-open", String(day));
-      btn.textContent = "＋ 사진·기록 올리기";
-
-      form = document.createElement("form");
-      form.className = "addbox";
-      form.hidden = true;
-      form.setAttribute("data-day", String(day));
-      form.setAttribute("autocomplete", "off");
-      form.innerHTML =
-        '<label class="filepick" for="file-' + uid + '">' +
-          '<span class="fpick">📷 사진 선택</span>' +
-          '<span class="fname">선택 안 함</span>' +
-          '<input type="file" id="file-' + uid + '" class="phfile" accept="image/*">' +
-        '</label>' +
-        '<div class="addrow">' +
-          '<input type="text" id="item-' + uid + '" class="phname" maxlength="40" placeholder="품목명 (예: 안 쓰는 믹서기)">' +
-          '<span class="qtylab">개수</span>' +
-          '<input type="number" id="qty-' + uid + '" class="phqty" min="1" max="99" step="1" value="1" inputmode="numeric" aria-label="개수">' +
-        '</div>' +
-        '<div class="submitrow"><button type="submit" class="submitbtn">올리기</button></div>' +
-        '<p class="addmsg" role="status"></p>';
-
-      wrap.appendChild(btn);
-      wrap.appendChild(form);
-      det.appendChild(wrap);
-    }
+  /* ---------- 날짜 이동 · 선택 ---------- */
+  function selectDate(ds) {
+    if (!ds || monthOf(ds) < 0) return;
+    selDate = ds;
+    curIdx = monthOf(ds);
+    addOpen = false;
+    render();
   }
 
-  function openForm(btn) {
-    var wrap = btn.parentNode;
-    var form = wrap ? qs(".addbox", wrap) : null;
-    if (!form) return;
-    var opening = !!form.hidden;
-    form.hidden = !opening;
-    btn.setAttribute("aria-expanded", opening ? "true" : "false");
-    if (opening) {
-      var inp = qs(".phname", form);
-      if (inp) { try { inp.focus(); } catch (e) {} }
-    } else {
-      var msg = qs(".addmsg", form);
-      if (msg) { msg.textContent = ""; setClass(msg, "ok", false); }
-    }
+  function moveMonth(step) {
+    var i = curIdx + step;
+    if (i < 0 || i >= MONTHS.length) return;
+    curIdx = i;
+    selDate = defaultSel(i);
+    addOpen = false;
+    render();
   }
 
   /* ---------- 사진 줄이기 (Canvas, 최대 폭 600px JPEG 0.7) ---------- */
@@ -2134,7 +2217,7 @@
     save(rec, function (ok) {
       if (ok) { cb(true, rec, false); return; }
       if (rec.photo) {
-        var thin = { id: rec.id, day: rec.day, item: rec.item, qty: rec.qty,
+        var thin = { id: rec.id, date: rec.date, day: rec.day, item: rec.item, qty: rec.qty,
                      time: rec.time, ts: rec.ts, photo: "" };
         save(thin, function (ok2) { cb(ok2, thin, true); });
         return;
@@ -2150,7 +2233,8 @@
   }
 
   function handleAdd(form) {
-    var day = parseInt(form.getAttribute("data-day"), 10) || todayDay();
+    var ds = form.getAttribute("data-date") || selDate || todayStr();
+    if (monthOf(ds) < 0) { flash("이 달에는 기록할 수 없어요."); return; }
     var fileIn = qs(".phfile", form), nameIn = qs(".phname", form), qtyIn = qs(".phqty", form);
     var msg = qs(".addmsg", form), submit = qs(".submitbtn", form);
     var item = nameIn ? String(nameIn.value || "").replace(/\s+/g, " ").replace(/^ | $/g, "") : "";
@@ -2169,7 +2253,8 @@
       var now = new Date();
       var rec = {
         id: "r" + now.getTime().toString(36) + Math.floor(Math.random() * 1679616).toString(36),
-        day: day,
+        date: ds,
+        day: parseInt(ds.slice(8, 10), 10),
         item: item,
         qty: qty,
         time: pad2(now.getHours()) + ":" + pad2(now.getMinutes()),
@@ -2178,27 +2263,18 @@
       };
       persist(rec, function (ok, saved, dropped) {
         if (ok) map[saved.id] = saved;
+        addOpen = true;
         render();
-        if (submit) { submit.disabled = false; submit.textContent = "올리기"; }
+        var box = qs("#calDets");
+        var msg2 = box ? qs(".addmsg", box) : msg;
         if (!ok) {
-          setMsg(msg, "저장하지 못했어요. 폰 저장 공간을 확인해 주세요.", false);
+          setMsg(msg2, "저장하지 못했어요. 폰 저장 공간을 확인해 주세요.", false);
           return;
         }
-        if (nameIn) nameIn.value = "";
-        if (qtyIn) qtyIn.value = "1";
-        if (fileIn) {
-          try { fileIn.value = ""; } catch (e) {}
-          var pick = parentByClass(fileIn, "filepick");
-          if (pick) {
-            setClass(pick, "picked", false);
-            var fn = qs(".fname", pick);
-            if (fn) fn.textContent = "선택 안 함";
-          }
-        }
-        if (photoErr) setMsg(msg, qty + "개 기록했어요 · 사진은 못 읽어서 빼고 저장했어요", false);
-        else if (dropped) setMsg(msg, qty + "개 저장했어요 · 사진은 용량 때문에 못 넣었어요", false);
-        else setMsg(msg, qty + "개 기록했어요 ✓", true);
-        flash(day + "일 · " + qty + "개 기록했어요");
+        if (photoErr) setMsg(msg2, qty + "개 기록했어요 · 사진은 못 읽어서 빼고 저장했어요", false);
+        else if (dropped) setMsg(msg2, qty + "개 저장했어요 · 사진은 용량 때문에 못 넣었어요", false);
+        else setMsg(msg2, qty + "개 기록했어요 ✓", true);
+        flash(dateLabel(ds) + " · " + qty + "개 기록했어요");
       });
     });
   }
@@ -2206,12 +2282,14 @@
   /* ---------- 삭제 ---------- */
   function removeRecord(id) {
     if (!id) return;
-    var src = id === SEED_ID ? SEED : map[id];
+    var src = (id === SEED_ID) ? SEED : map[id];
+    var ds = dateOf(src) || selDate || todayStr();
     var now = new Date();
     var tomb = {
       id: id,
       deleted: true,
-      day: src ? src.day : todayDay(),
+      date: ds,
+      day: parseInt(ds.slice(8, 10), 10) || 0,
       item: src ? src.item : "",
       qty: 0,
       time: src ? src.time : "",
@@ -2229,8 +2307,24 @@
   /* ---------- 이벤트 ---------- */
   try {
     document.addEventListener("click", function (ev) {
+      var dayBtn = byAttr(ev.target, "data-calday");
+      if (dayBtn) { selectDate(dayBtn.getAttribute("data-calday")); return; }
+      var tid = ev.target && ev.target.id;
+      if (tid === "calPrev") { moveMonth(-1); return; }
+      if (tid === "calNext") { moveMonth(1); return; }
       var openBtn = byAttr(ev.target, "data-open");
-      if (openBtn) { openForm(openBtn); return; }
+      if (openBtn) {
+        var wrap = openBtn.parentNode;
+        var form = wrap ? qs(".addbox", wrap) : null;
+        if (form) {
+          var opening = !!form.hidden;
+          form.hidden = !opening;
+          addOpen = opening;
+          openBtn.setAttribute("aria-expanded", opening ? "true" : "false");
+          if (opening) { var inp = qs(".phname", form); if (inp) { try { inp.focus(); } catch (e) {} } }
+        }
+        return;
+      }
       var delBtn = byAttr(ev.target, "data-del");
       if (delBtn) {
         try { ev.preventDefault(); } catch (e) {}
@@ -2263,7 +2357,22 @@
 
   /* ---------- 시작 ---------- */
   function boot() {
-    try { buildAddUI(); } catch (e) {}
+    /* 정적 11월 시드 사진(타임스탬프)을 그대로 쓴다 */
+    try {
+      var simg = qs("#seedRec img.ph");
+      var ssrc = simg ? simg.getAttribute("src") : "";
+      if (ssrc) SEED.photo = ssrc;
+    } catch (e) {}
+
+    try {
+      var t = todayStr();
+      var ti = monthOf(t);
+      curIdx = ti >= 0 ? ti : (t < MONTHS[0].key ? 0 : MONTHS.length - 1);
+      selDate = defaultSel(curIdx);
+    } catch (e) { curIdx = 0; selDate = "2026-11-01"; }
+
+    render();
+
     openStore(function () {
       loadAll(function (rows) {
         var i, r;
