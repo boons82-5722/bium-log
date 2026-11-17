@@ -501,6 +501,45 @@
   .caljs .cd.sel .n{color:#fff}
   .caljs .cd.sel .b{background:#fff;color:#e8743b}
   .caljs .cd.sel .tdy{color:#fff}
+
+  /* ===== 사진 촬영일(EXIF) 자동 인식 ===== */
+  .addbox .datebar{display:flex;align-items:center;gap:7px;margin:7px 0 0}
+  .addbox .datebar .dlabel{flex:none;font-size:11.5px;font-weight:800;color:#a48d79}
+  .addbox input[type="date"]{flex:1;min-width:0;min-height:42px;padding:0 9px;font-size:13px;
+    -webkit-appearance:none;appearance:none;font-family:inherit;color:#4a3f36;background:#fff;
+    border:1px solid #ecdcc8;border-radius:10px;font-variant-numeric:tabular-nums}
+  .addbox input[type="date"]:focus{outline:0;border-color:#e8743b;box-shadow:0 0 0 3px rgba(232,116,59,.13)}
+  .addbox .exifnote{margin:0 0 7px;padding:7px 9px;border:1px dashed #e8bb96;border-radius:9px;background:#fff6ec;
+    font-size:11.5px;font-weight:800;color:#a5531f;line-height:1.45}
+  .addbox .exifnote[hidden]{display:none}
+  .addbox .exifnote.mute{border-style:solid;border-color:#efe0cd;background:#fffdf9;color:#a48d79;font-weight:700}
+
+  /* ===== 기록 수정(품목·개수) ===== */
+  .det-h .acts{flex:none;margin-left:auto;display:inline-flex;gap:6px}
+  .det-h .acts .del{margin-left:0}
+  .edit{flex:none;display:inline-flex;align-items:center;justify-content:center;
+    min-height:40px;padding:0 14px;border:1px solid #ecd9c4;border-radius:99px;background:#fff;
+    color:#a4785a;font-size:11.5px;font-weight:800;font-family:inherit;letter-spacing:-.3px;cursor:pointer}
+  .edit:active{background:#fbe6d3}
+  .rec .acts{flex:none;display:inline-flex;gap:5px;align-items:center}
+  .rec .edit{min-height:32px;padding:0 10px;font-size:10.5px}
+  .edbox{margin:8px 0 0;padding:9px;border:1px solid #f0dfcc;border-radius:11px;background:#fffaf3}
+  .edbox[hidden]{display:none}
+  .edbox .edrow{display:flex;gap:7px;align-items:center}
+  .edbox .qtylab{flex:none;font-size:11.5px;font-weight:700;color:#a48d79}
+  .edbox input[type="text"]{flex:1;min-width:0;min-height:42px;padding:0 10px;font-size:14px;
+    -webkit-appearance:none;appearance:none;font-family:inherit;color:#4a3f36;background:#fff;
+    border:1px solid #ecdcc8;border-radius:10px}
+  .edbox input[type="number"]{flex:none;width:64px;min-height:42px;text-align:center;font-size:14px;
+    -webkit-appearance:none;appearance:none;font-family:inherit;color:#4a3f36;background:#fff;
+    border:1px solid #ecdcc8;border-radius:10px;font-variant-numeric:tabular-nums}
+  .edbox input:focus{outline:0;border-color:#e8743b;box-shadow:0 0 0 3px rgba(232,116,59,.13)}
+  .edbox .edbtns{display:flex;gap:7px;margin-top:7px}
+  .edbox .edbtns button{min-height:42px;border-radius:10px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
+  .edbox .edsave{flex:1;border:0;background:#e8743b;color:#fff}
+  .edbox .edcancel{flex:none;width:70px;border:1px solid #ecd9c4;background:#fff;color:#a4785a}
+  .edbox .edmsg{margin:6px 0 0;font-size:11.5px;font-weight:700;color:#b4551f}
+  .edbox .edmsg:empty{display:none}
 </style>
 </head>
 <body>
@@ -2161,7 +2200,7 @@
 
   var db = null, lsOnly = false;
   var map = {};                    /* id -> 기록 (삭제 표시 포함) */
-  var curIdx = 0, selDate = "", addOpen = false;
+  var curIdx = 0, selDate = "", addOpen = false, editId = "";
 
   /* ---------- 작은 도구 ---------- */
   function qs(sel, ctx) {
@@ -2175,6 +2214,11 @@
   }
   function own(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
   function pad2(n) { return (n < 10 ? "0" : "") + n; }
+  function nowLocal() {
+    var d = new Date();
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + " " +
+           pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+  }
   function parentByClass(el, cls) {
     var n = el ? el.parentNode : null;
     while (n && n.nodeType === 1) {
@@ -2336,6 +2380,23 @@
   function isActive(r) { return !!r && !r.deleted && monthOf(dateOf(r)) >= 0; }
   function seedGone() { return !!(map[SEED_ID] && map[SEED_ID].deleted); }
 
+  /* 시드 기록: 고친본이 저장돼 있으면 그걸 쓰고, 없으면 원본 시드 */
+  function seedRec() {
+    var m = map[SEED_ID];
+    if (!m || m.deleted) return SEED;
+    var q = parseInt(m.qty, 10);
+    return {
+      id: SEED_ID, seed: true,
+      date: SEED.date, day: SEED.day,
+      item: m.item ? m.item : SEED.item,
+      qty: (q > 0) ? q : SEED.qty,
+      time: m.time || SEED.time,
+      ts: SEED.ts,
+      photo: m.photo || SEED.photo,
+      mod: m.mod || ""
+    };
+  }
+
   function listFor(ds) {
     var out = [], k, r;
     for (k in map) {
@@ -2343,7 +2404,7 @@
       r = map[k];
       if (r && !r.deleted && r.id !== SEED_ID && dateOf(r) === ds) out.push(r);
     }
-    if (ds === SEED.date && !seedGone()) out.push(SEED);
+    if (ds === SEED.date && !seedGone()) out.push(seedRec());
     out.sort(function (a, b) { return a.ts < b.ts ? -1 : (a.ts > b.ts ? 1 : 0); });
     return out;
   }
@@ -2355,7 +2416,7 @@
       r = map[k];
       if (isActive(r) && r.id !== SEED_ID) out.push(r);
     }
-    if (!seedGone()) out.push(SEED);
+    if (!seedGone()) out.push(seedRec());
     out.sort(function (a, b) { return a.ts < b.ts ? 1 : (a.ts > b.ts ? -1 : 0); });
     return out;
   }
@@ -2367,18 +2428,47 @@
   }
   function dateQty(ds) { return qtySum(listFor(ds)); }
 
+  /* 기록 하나 찾기 (시드 포함) */
+  function recById(id) {
+    if (!id) return null;
+    if (id === SEED_ID) return seedGone() ? null : seedRec();
+    var r = map[id];
+    return (r && !r.deleted) ? r : null;
+  }
+
   /* ---------- 그리기 ---------- */
+  function editForm(r, open) {
+    var q = parseInt(r.qty, 10) || 1;
+    var h = '<form class="edbox" data-eid="' + esc(r.id) + '"' + (open ? '' : ' hidden') + ' autocomplete="off">';
+    h += '<div class="edrow">';
+    h += '<input type="text" class="edname" maxlength="40" placeholder="품목명" value="' + esc(r.item) + '" aria-label="품목명">';
+    h += '<span class="qtylab">개수</span>';
+    h += '<input type="number" class="edqty" min="1" max="99" step="1" inputmode="numeric" value="' + q + '" aria-label="개수">';
+    h += '</div>';
+    h += '<div class="edbtns"><button type="submit" class="edsave">저장</button>';
+    h += '<button type="button" class="edcancel" data-edcancel="' + esc(r.id) + '">취소</button></div>';
+    h += '<p class="edmsg" role="status"></p>';
+    h += '</form>';
+    return h;
+  }
+
   function recCard(r) {
     var q = parseInt(r.qty, 10) || 1;
     var ds = dateOf(r);
+    var open = (!!editId && r.id === editId);
     var h = '<div class="rec-item" data-rec="' + esc(r.id) + '">';
     h += '<div class="det-h"><span class="dt">' + dateLabel(ds) + '</span>';
     h += '<span class="db">' + q + '개 비움</span>';
-    h += '<button type="button" class="del" data-del="' + esc(r.id) + '">삭제</button></div>';
+    h += '<span class="acts">';
+    h += '<button type="button" class="edit" data-cedit="' + esc(r.id) + '" aria-expanded="' + (open ? 'true' : 'false') + '">수정</button>';
+    h += '<button type="button" class="del" data-del="' + esc(r.id) + '">삭제</button>';
+    h += '</span></div>';
     if (r.photo) h += '<img class="ph" src="' + r.photo + '" alt="' + dateLabel(ds) + ' 비운 물건 사진">';
     h += '<div class="kv2"><span class="k">품목</span><span class="v">' + esc(r.item) + '</span></div>';
     h += '<div class="kv2"><span class="k">개수</span><span class="v">' + q + '개</span></div>';
     h += '<div class="kv2"><span class="k">시각</span><span class="v">' + esc(r.time) + '</span></div>';
+    if (r.mod) h += '<div class="kv2"><span class="k">수정</span><span class="v">' + esc(r.mod) + ' 고친 기록</span></div>';
+    h += editForm(r, open);
     h += '</div>';
     return h;
   }
@@ -2420,11 +2510,17 @@
     return '<div class="addwrap">' +
         '<button type="button" class="openAdd" aria-expanded="false" data-open="' + ds + '">＋ 사진·기록 올리기</button>' +
         '<form class="addbox" hidden data-date="' + ds + '" autocomplete="off">' +
+          '<p class="exifnote" hidden></p>' +
           '<label class="filepick" for="file-' + uid + '">' +
             '<span class="fpick">📷 사진 선택</span>' +
             '<span class="fname">선택 안 함</span>' +
             '<input type="file" id="file-' + uid + '" class="phfile" accept="image/*">' +
           '</label>' +
+          '<div class="datebar">' +
+            '<span class="dlabel">저장 날짜</span>' +
+            '<input type="date" id="date-' + uid + '" class="phdate" value="' + ds + '"' +
+              ' min="2026-11-01" max="2027-02-28" aria-label="저장 날짜">' +
+          '</div>' +
           '<div class="addrow">' +
             '<input type="text" id="item-' + uid + '" class="phname" maxlength="40" placeholder="품목명 (예: 안 쓰는 믹서기)">' +
             '<span class="qtylab">개수</span>' +
@@ -2434,6 +2530,15 @@
           '<p class="addmsg" role="status"></p>' +
         '</form>' +
       '</div>';
+  }
+
+  /* 올리기 버튼 이름을 고른 날짜에 맞춰 바꿈 (다른 날짜면 "11/9에 올리기") */
+  function syncSubmit(form) {
+    if (!form) return;
+    var b = qs(".submitbtn", form), d = qs(".phdate", form);
+    if (!b) return;
+    var ds = (d && d.value) ? d.value : (form.getAttribute("data-date") || selDate);
+    b.textContent = (ds && ds !== selDate) ? shortDate(ds) + "에 올리기" : "올리기";
   }
 
   function renderDet() {
@@ -2457,7 +2562,7 @@
     box.innerHTML = h;
     if (addOpen) {
       var f = qs(".addbox", box), b = qs(".openAdd", box);
-      if (f) f.hidden = false;
+      if (f) { f.hidden = false; syncSubmit(f); }
       if (b) b.setAttribute("aria-expanded", "true");
     }
   }
@@ -2501,7 +2606,8 @@
       h += '<div class="rec" data-rec="' + esc(r.id) + '">';
       h += '<span class="rt">' + shortDate(dateOf(r)) + " " + esc(r.time) + '</span>';
       h += '<span class="rn">' + esc(r.item) + " " + q + "개 · " + ((r.photo || r.seed) ? "사진 인증" : "사진 없음") + '</span>';
-      h += '<button type="button" class="del" data-del="' + esc(r.id) + '">삭제</button></div>';
+      h += '<span class="acts"><button type="button" class="edit" data-ceditgoto="' + esc(r.id) + '">수정</button>';
+      h += '<button type="button" class="del" data-del="' + esc(r.id) + '">삭제</button></span></div>';
     }
     box.innerHTML = h;
   }
@@ -2561,7 +2667,120 @@
     curIdx = i;
     selDate = defaultSel(i);
     addOpen = false;
+    editId = "";
     render();
+  }
+
+  /* ---------- 사진 촬영일(EXIF): JPEG APP1 → TIFF IFD → DateTimeOriginal(0x9003)/DateTime(0x0132) ---------- */
+  function exifDateStr(s) {                    /* "2026:11:09 14:23:01" → "2026-11-09" */
+    var m = String(s || "").match(/^(\d{4})[:\-\/](\d{2})[:\-\/](\d{2})/);
+    if (!m) return "";
+    var y = parseInt(m[1], 10), mo = parseInt(m[2], 10), d = parseInt(m[3], 10);
+    if (!(y >= 1990 && y <= 2100) || mo < 1 || mo > 12 || d < 1 || d > 31) return "";
+    return m[1] + "-" + m[2] + "-" + m[3];
+  }
+
+  function exifAscii(dv, base, entry, little) {
+    var count = dv.getUint32(entry + 4, little);
+    if (!count || count > 64) return "";
+    var p = (count <= 4) ? (entry + 8) : (base + dv.getUint32(entry + 8, little));
+    if (p < 0 || p + count > dv.byteLength) return "";
+    var out = "", i, c;
+    for (i = 0; i < count; i++) {
+      c = dv.getUint8(p + i);
+      if (c === 0) break;
+      out += String.fromCharCode(c);
+    }
+    return out;
+  }
+
+  function exifReadIfd(dv, base, ifdOff, little, out) {
+    var p = base + ifdOff, n, i, e, tag, type;
+    if (p < 0 || p + 2 > dv.byteLength) return out;
+    n = dv.getUint16(p, little);
+    if (n > 512) return out;
+    for (i = 0; i < n; i++) {
+      e = p + 2 + i * 12;
+      if (e + 12 > dv.byteLength) break;
+      tag = dv.getUint16(e, little);
+      type = dv.getUint16(e + 2, little);
+      if (tag === 0x8769) {                     /* Exif IFD 포인터 (LONG/IFD) */
+        if (type === 4 || type === 13) out.exifPtr = dv.getUint32(e + 8, little);
+        continue;
+      }
+      if (type !== 2) continue;                 /* ASCII 문자열만 */
+      if (tag === 0x0132) out.dt = out.dt || exifAscii(dv, base, e, little);
+      else if (tag === 0x9003) out.dto = out.dto || exifAscii(dv, base, e, little);
+      else if (tag === 0x9004) out.dtd = out.dtd || exifAscii(dv, base, e, little);
+    }
+    return out;
+  }
+
+  function exifTiffDate(dv, base) {
+    var bo, little, ifd0, out, r2;
+    if (base + 8 > dv.byteLength) return "";
+    bo = dv.getUint16(base, false);
+    if (bo === 0x4949) little = true;
+    else if (bo === 0x4D4D) little = false;
+    else return "";
+    if (dv.getUint16(base + 2, little) !== 42) return "";
+    ifd0 = dv.getUint32(base + 4, little);
+    if (ifd0 <= 0 || ifd0 >= dv.byteLength) return "";
+    out = exifReadIfd(dv, base, ifd0, little, { dt: "", dto: "", dtd: "", exifPtr: -1 });
+    if (out.exifPtr > 0 && out.exifPtr < dv.byteLength) {
+      r2 = exifReadIfd(dv, base, out.exifPtr, little, { dt: "", dto: "", dtd: "", exifPtr: -1 });
+      out.dto = out.dto || r2.dto;
+      out.dtd = out.dtd || r2.dtd;
+    }
+    return out.dto || out.dtd || out.dt || "";
+  }
+
+  function exifScan(dv) {                      /* JPEG 마커를 따라가며 APP1(EXIF) 찾기 */
+    var len = dv.byteLength, off = 2, marker, size, t;
+    if (len < 4 || dv.getUint16(0, false) !== 0xFFD8) return "";
+    while (off + 4 <= len) {
+      if (dv.getUint8(off) !== 0xFF) { off++; continue; }
+      marker = dv.getUint8(off + 1);
+      if (marker === 0xFF) { off++; continue; }
+      if (marker === 0xD8 || marker === 0x01 || (marker >= 0xD0 && marker <= 0xD7)) { off += 2; continue; }
+      if (marker === 0xDA || marker === 0xD9) break;      /* SOS/EOI 뒤에는 메타데이터 없음 */
+      size = dv.getUint16(off + 2, false);
+      if (size < 2) break;
+      if (marker === 0xE1 && size >= 10 &&
+          dv.getUint32(off + 4, false) === 0x45786966 && dv.getUint16(off + 8, false) === 0x0000) {
+        t = exifTiffDate(dv, off + 10);
+        if (t) return t;
+      }
+      off += 2 + size;
+    }
+    return "";
+  }
+
+  function exifDateFromBuffer(buf) {
+    var raw = "";
+    try {
+      if (!buf || !buf.byteLength || buf.byteLength < 12) return "";
+      raw = exifScan(new DataView(buf));
+    } catch (e) { raw = ""; }
+    return exifDateStr(raw);
+  }
+
+  /* 사진 파일 → 촬영일 (JPEG만 · 앞 256KB만 읽음) */
+  function readExifFile(file, cb) {
+    if (!file) { cb(""); return; }
+    var type = String(file.type || "").toLowerCase();
+    var name = String(file.name || "").toLowerCase();
+    if ((type && !/jpe?g/.test(type)) || (!type && !/\.jpe?g$/.test(name))) { cb(""); return; }
+    var fr, part = file;
+    try { if (file.slice) part = file.slice(0, 262144); } catch (e) { part = file; }
+    try { fr = new FileReader(); } catch (e) { cb(""); return; }
+    fr.onload = function () {
+      var buf = null;
+      try { buf = fr.result; } catch (e) { buf = null; }
+      cb(buf ? exifDateFromBuffer(buf) : "");
+    };
+    fr.onerror = function () { cb(""); };
+    try { fr.readAsArrayBuffer(part); } catch (e) { cb(""); }
   }
 
   /* ---------- 사진 줄이기 (Canvas, 최대 폭 600px JPEG 0.7) ---------- */
@@ -2628,8 +2847,10 @@
   }
 
   function handleAdd(form) {
-    var ds = form.getAttribute("data-date") || selDate || todayStr();
-    if (monthOf(ds) < 0) { flash("이 달에는 기록할 수 없어요."); return; }
+    var dateIn = qs(".phdate", form);
+    var ds = (dateIn && dateIn.value) ? String(dateIn.value) : (form.getAttribute("data-date") || selDate || todayStr());
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ds)) ds = form.getAttribute("data-date") || selDate || todayStr();
+    if (monthOf(ds) < 0) { flash("이 달에는 기록할 수 없어요 · 2026.11~2027.2 안에서 골라 주세요"); return; }
     var fileIn = qs(".phfile", form), nameIn = qs(".phname", form), qtyIn = qs(".phqty", form);
     var msg = qs(".addmsg", form), submit = qs(".submitbtn", form);
     var item = nameIn ? String(nameIn.value || "").replace(/\s+/g, " ").replace(/^ | $/g, "") : "";
@@ -2658,26 +2879,79 @@
       };
       persist(rec, function (ok, saved, dropped) {
         if (ok) map[saved.id] = saved;
-        addOpen = true;
-        render();
-        var box = qs("#calDets");
-        var msg2 = box ? qs(".addmsg", box) : msg;
         if (!ok) {
-          setMsg(msg2, "저장하지 못했어요. 폰 저장 공간을 확인해 주세요.", false);
+          addOpen = true;
+          render();
+          setMsg(qs(".addmsg", qs("#calDets")), "저장하지 못했어요. 폰 저장 공간을 확인해 주세요.", false);
           return;
         }
+        /* 해당 날짜로 이동해 그 날 날짜 상세와 누적 합계를 바로 보여준다 */
+        var moved = (monthOf(ds) >= 0 && ds !== selDate);
+        if (moved) { selDate = ds; curIdx = monthOf(ds); }
+        addOpen = true;
+        render();
+        if (moved) {
+          try {
+            var dbox = qs("#calDets");
+            if (dbox && dbox.scrollIntoView) dbox.scrollIntoView({ block: "nearest" });
+          } catch (e) {}
+        }
+        var msg2 = qs(".addmsg", qs("#calDets"));
         if (photoErr) setMsg(msg2, qty + "개 기록했어요 · 사진은 못 읽어서 빼고 저장했어요", false);
         else if (dropped) setMsg(msg2, qty + "개 저장했어요 · 사진은 용량 때문에 못 넣었어요", false);
         else setMsg(msg2, qty + "개 기록했어요 ✓", true);
-        flash(dateLabel(ds) + " · " + qty + "개 기록했어요");
+        flash(dateLabel(ds) + " · " + qty + "개 기록 · 누적 " + qtySum(activeList()) + "개");
       });
+    });
+  }
+
+  /* ---------- 수정 (품목·개수) ---------- */
+  function handleEdit(form) {
+    var id = form.getAttribute("data-eid") || "";
+    if (!id) return;
+    var src = recById(id);
+    if (!src) { flash("고칠 기록을 찾지 못했어요"); return; }
+    var nameIn = qs(".edname", form), qtyIn = qs(".edqty", form);
+    var msg = qs(".edmsg", form), btn = qs(".edsave", form);
+    var item = nameIn ? String(nameIn.value || "").replace(/\s+/g, " ").replace(/^ | $/g, "") : "";
+    var qty = qtyIn ? parseInt(qtyIn.value, 10) : 1;
+    if (!item) { setMsg(msg, "품목명을 적어 주세요.", false); if (nameIn) { try { nameIn.focus(); } catch (e) {} } return; }
+    if (!qty || qty < 1) qty = 1;
+    if (qty > 99) qty = 99;
+    if (item === src.item && qty === (parseInt(src.qty, 10) || 1)) {
+      editId = "";
+      render();
+      flash("바뀐 게 없어요");
+      return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = "저장 중…"; }
+    var ds = dateOf(src);
+    var upd = {
+      id: id,
+      date: ds,
+      day: parseInt(String(ds).slice(8, 10), 10) || 0,
+      item: item,
+      qty: qty,
+      time: src.time || "",
+      ts: src.ts || new Date().toISOString(),
+      photo: (id === SEED_ID) ? "" : (src.photo || ""),   /* 시드는 원본 사진을 그대로 쓴다 */
+      mod: nowLocal()
+    };
+    if (id === SEED_ID) upd.seed = true;
+    map[id] = upd;                 /* 화면에 먼저 반영 */
+    editId = "";
+    render();
+    flash("고쳤어요 · 누적 " + qtySum(activeList()) + "개");
+    save(upd, function (ok) {
+      if (!ok) flash("고쳤지만 저장이 안 됐어요. 앱을 다시 열면 되돌아갈 수 있어요.");
     });
   }
 
   /* ---------- 삭제 ---------- */
   function removeRecord(id) {
     if (!id) return;
-    var src = (id === SEED_ID) ? SEED : map[id];
+    var src = recById(id);
+    if (!src) return;
     var ds = dateOf(src) || selDate || todayStr();
     var now = new Date();
     var tomb = {
@@ -2703,7 +2977,7 @@
   try {
     document.addEventListener("click", function (ev) {
       var dayBtn = byAttr(ev.target, "data-calday");
-      if (dayBtn) { selectDate(dayBtn.getAttribute("data-calday")); return; }
+      if (dayBtn) { editId = ""; selectDate(dayBtn.getAttribute("data-calday")); return; }
       var tid = ev.target && ev.target.id;
       if (tid === "calPrev") { moveMonth(-1); return; }
       if (tid === "calNext") { moveMonth(1); return; }
@@ -2720,6 +2994,54 @@
         }
         return;
       }
+      var edBtn = byAttr(ev.target, "data-cedit");
+      if (edBtn) {
+        try { ev.preventDefault(); } catch (e) {}
+        var recW = parentByClass(edBtn, "rec-item");
+        var ef = recW ? qs(".edbox", recW) : null;
+        editId = edBtn.getAttribute("data-cedit");
+        if (ef && ef.hidden) {
+          ef.hidden = false;
+          try { edBtn.setAttribute("aria-expanded", "true"); } catch (e) {}
+          var ni = qs(".edname", ef);
+          if (ni) { try { ni.focus(); } catch (e) {} }
+        } else { render(); }
+        return;
+      }
+      var goBtn = byAttr(ev.target, "data-ceditgoto");
+      if (goBtn) {
+        try { ev.preventDefault(); } catch (e) {}
+        var gid = goBtn.getAttribute("data-ceditgoto");
+        var gr = recById(gid);
+        if (!gr) return;
+        editId = gid;
+        selectDate(dateOf(gr));
+        try {
+          var gw = parentByClass(qs(".edbox", qs("#calDets")), "rec-item");
+          if (gw && gw.scrollIntoView) gw.scrollIntoView({ block: "center" });
+        } catch (e) {}
+        return;
+      }
+      var cnBtn = byAttr(ev.target, "data-edcancel");
+      if (cnBtn) {
+        try { ev.preventDefault(); } catch (e) {}
+        var cf = byAttr(cnBtn, "data-eid");
+        editId = "";
+        if (cf) {
+          cf.hidden = true;
+          var cr = recById(cnBtn.getAttribute("data-edcancel"));
+          if (cr) {
+            var ci = qs(".edname", cf), cq = qs(".edqty", cf);
+            if (ci) ci.value = cr.item || "";
+            if (cq) cq.value = String(parseInt(cr.qty, 10) || 1);
+          }
+          setMsg(qs(".edmsg", cf), "", false);
+          var cw = parentByClass(cf, "rec-item");
+          var cBtn = cw ? qs(".edit", cw) : null;
+          if (cBtn) { try { cBtn.setAttribute("aria-expanded", "false"); } catch (e) {} }
+        }
+        return;
+      }
       var delBtn = byAttr(ev.target, "data-del");
       if (delBtn) {
         try { ev.preventDefault(); } catch (e) {}
@@ -2731,7 +3053,13 @@
   try {
     document.addEventListener("submit", function (ev) {
       var form = ev.target;
-      if (!form || !hasClass(form, "addbox")) return;
+      if (!form) return;
+      if (hasClass(form, "edbox")) {
+        ev.preventDefault();
+        try { handleEdit(form); } catch (e) { flash("고치지 못했어요. 다시 해 주세요."); }
+        return;
+      }
+      if (!hasClass(form, "addbox")) return;
       ev.preventDefault();
       try { handleAdd(form); } catch (e) { flash("올리지 못했어요. 다시 해 주세요."); }
     });
@@ -2740,13 +3068,64 @@
   try {
     document.addEventListener("change", function (ev) {
       var t = ev.target;
-      if (!t || !hasClass(t, "phfile")) return;
+      if (!t) return;
+
+      /* 저장 날짜를 직접 바꿈 → 폼의 저장 날짜도 따라감 */
+      if (hasClass(t, "phdate")) {
+        var df = parentByClass(t, "addbox");
+        if (df && t.value) df.setAttribute("data-date", t.value);
+        var dn = df ? qs(".exifnote", df) : null;
+        if (dn) { dn.hidden = true; dn.textContent = ""; setClass(dn, "mute", false); }
+        syncSubmit(df);
+        return;
+      }
+
+      if (!hasClass(t, "phfile")) return;
       var pick = parentByClass(t, "filepick");
       if (!pick) return;
+      var form = parentByClass(t, "addbox");
       var has = !!(t.files && t.files.length);
       setClass(pick, "picked", has);
       var fn = qs(".fname", pick);
       if (fn) fn.textContent = has ? String(t.files[0].name || "사진 선택됨").slice(0, 22) : "선택 안 함";
+
+      var note = form ? qs(".exifnote", form) : null;
+      var dateIn = form ? qs(".phdate", form) : null;
+      if (note) { note.hidden = true; note.textContent = ""; setClass(note, "mute", false); }
+      syncSubmit(form);
+      if (!has) return;
+
+      /* 사진 촬영일(EXIF) 자동 인식 */
+      var file = t.files[0];
+      readExifFile(file, function (exif) {
+        try {
+          var cur = (t.files && t.files.length) ? t.files[0] : null;
+          if (!cur || cur.name !== file.name || cur.size !== file.size || cur.lastModified !== file.lastModified) return;
+          if (!note) note = form ? qs(".exifnote", form) : null;
+          if (!dateIn) dateIn = form ? qs(".phdate", form) : null;
+          if (exif && monthOf(exif) >= 0) {
+            if (dateIn) dateIn.value = exif;
+            if (form) form.setAttribute("data-date", exif);
+            if (note) {
+              note.textContent = "📅 사진 촬영일(" + exif + ")로 자동 맞춰졌어요";
+              note.hidden = false;
+              setClass(note, "mute", false);
+            }
+            syncSubmit(form);
+            flash("사진 촬영일 " + shortDate(exif) + "로 맞췄어요");
+          } else if (exif) {
+            if (note) {
+              note.textContent = "📅 사진은 " + exif + " 촬영인데 달력(2026.11~2027.2) 밖이에요 · 고른 날짜로 저장돼요";
+              note.hidden = false;
+              setClass(note, "mute", true);
+            }
+          } else if (note) {
+            note.textContent = "📅 촬영일을 못 읽었어요 · 고른 날짜로 저장돼요";
+            note.hidden = false;
+            setClass(note, "mute", true);
+          }
+        } catch (e) {}
+      });
     });
   } catch (e) {}
 
