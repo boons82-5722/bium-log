@@ -2311,6 +2311,7 @@
     var empty = !weekSaved;
     var guide = document.getElementById("wkEmpty");
     if (guide) guide.hidden = !empty;
+    if (empty) wkMsg("");   /* 안내 카드가 다시 뜨면 지난번 진행 문구는 지운다 */
     var tip = document.getElementById("dayTip");
     if (tip) tip.hidden = empty;
     var pw = document.querySelector("#p2 .prog-wrap");
