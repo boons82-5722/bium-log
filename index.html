@@ -93,6 +93,35 @@
   .btnrow{margin-top:9px;display:flex;gap:7px}
   .btnrow .reset{flex:1}
 
+  /* 🧊 냉장고 재료로 AI 식단 짜기 */
+  .fridge{background:linear-gradient(165deg,#f4fbfe,#eaf6fb);border-color:#d7eaf3}
+  .fridge h2{margin-bottom:7px}
+  .fridge h2 .s{color:#7d9aa6}
+  .fridge .fr-ta{
+    display:block;width:100%;min-height:60px;padding:10px 11px;
+    border:1px solid #d5e7ef;border-radius:11px;background:#fff;color:#3c4a50;
+    font-family:inherit;font-size:16px;line-height:1.6;resize:vertical;box-sizing:border-box;
+  }
+  .fridge .fr-ta:focus{outline:0;border-color:#3f9ec4;box-shadow:0 0 0 3px rgba(63,158,196,.15)}
+  .fridge .fr-btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+  .fridge .fr-go{
+    flex:1 1 100%;min-height:44px;border:0;border-radius:12px;background:#2f8fb8;color:#fff;
+    font-family:inherit;font-size:13px;font-weight:800;letter-spacing:-.2px;cursor:pointer;
+  }
+  .fridge .fr-go:active{background:#26799e}
+  .fridge .fr-go[disabled]{background:#a9c8d5;cursor:default}
+  .fridge .fr-undo{
+    flex:1 1 100%;min-height:40px;border:1px solid #d5e7ef;border-radius:12px;background:#fff;
+    color:#416e80;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;
+  }
+  .fridge .fr-undo:active{background:#eaf6fb}
+  .fridge .fr-undo[hidden]{display:none}
+  .fridge .fr-msg{margin:8px 1px 0;font-size:11.5px;font-weight:700;color:#6d8b98;line-height:1.55;word-break:keep-all}
+  .fridge .fr-msg:empty{display:none}
+  .fridge .fr-msg.busy{color:#2f8fb8}
+  .fridge .fr-msg.ok{color:#2b7a58}
+  .fridge .fr-msg.err{color:#c2451a}
+
   /* accordion sections */
   .sec{
     border:1px solid #f4e7d7;border-radius:14px;margin:0 0 10px;
@@ -1201,6 +1230,16 @@
       </div>
 
       <p class="note" style="margin:-3px 2px 10px;word-break:keep-all">메뉴 하나씩 체크하면 그 줄만 지워져요 · [⋯]를 누르면 다른 요일로 옮기기·고치기·지우기가 돼요</p>
+
+      <div class="card fridge" id="fridgeCard">
+        <h2>🧊 냉장고 재료로 AI 식단 짜기<small class="s">먼저 먹어야 할 재료를 적으면 월~토 6일 식단을 다시 짜 드려요</small></h2>
+        <textarea class="fr-ta" id="frInput" rows="2" spellcheck="false" placeholder="예: 육개장, 제육볶음, 부추, 오이, 두부"></textarea>
+        <div class="fr-btns">
+          <button type="button" class="fr-go" id="frGo">✨ 냉장고 재료로 식단 짜기</button>
+          <button type="button" class="fr-undo" id="frUndo" hidden>↩️ 직전 식단 되돌리기</button>
+        </div>
+        <p class="fr-msg" id="frMsg" role="status"></p>
+      </div>
 
       <div class="day" data-day="mon">
         <div class="day-h">
@@ -2420,6 +2459,329 @@
     cancelB.addEventListener("click", closeEditors);
   }
 
+  /* ===== 🧊 냉장고 재료로 AI 식단 짜기 =====
+     탭1의 AI 설정에 저장해 둔 키(localStorage)를 그대로 쓴다.
+     새 식단을 덮어쓰기 직전의 식단은 한 번 백업해 두고 [↩️ 직전 식단 되돌리기]로 복원한다. */
+  var FR_INPUT_KEY = "biumlog-fridge-input-v1";
+  var FR_BACKUP_KEY = "biumlog-diet-backup-v1";
+  var FR_PROV_KEY = "biumlog-ai-provider-v1";
+  var FR_KEY_KEY = "biumlog-ai-key-v1";
+  var FR_MODEL = "gemini-2.5-flash", FR_MODEL_ALT = "gemini-3.5-flash-lite";
+
+  function frEl(id) { return document.getElementById(id); }
+
+  function frMsg(text, kind) {
+    var m = frEl("frMsg");
+    if (!m) return;
+    m.textContent = text || "";
+    m.className = "fr-msg" + (kind ? " " + kind : "");
+  }
+
+  function frBusy(on) {
+    var go = frEl("frGo"), un = frEl("frUndo");
+    if (go) {
+      go.disabled = !!on;
+      go.textContent = on ? "🤖 냉장고 재료로 식단 짜는 중..." : "✨ 냉장고 재료로 식단 짜기";
+    }
+    if (un) un.disabled = !!on;
+    if (!on) frSyncUndo();
+  }
+
+  function frBackup() {
+    try {
+      var raw = window.localStorage.getItem(FR_BACKUP_KEY);
+      if (!raw) return null;
+      var o = JSON.parse(raw);
+      if (o && o.days && typeof o.days === "object") return o;
+    } catch (e) {}
+    return null;
+  }
+  function frSyncUndo() {
+    var un = frEl("frUndo");
+    if (!un) return;
+    var has = !!frBackup();
+    un.hidden = !has;
+    un.disabled = !has;
+  }
+
+  function frErrLabel(code) {
+    var c = String(code || "err"), hint = "";
+    if (c === "http400") hint = " · 키나 모델";
+    else if (c === "http401") hint = " · 키 확인";
+    else if (c === "http403") hint = " · 키 권한/차단";
+    else if (c === "http404") hint = " · 모델 없음";
+    else if (c === "http429") hint = " · 무료 한도 초과";
+    else if (c === "http5") hint = "";
+    else if (c.indexOf("http5") === 0) hint = " · 서버 오류";
+    else if (c === "timeout") hint = " · 응답 없음";
+    else if (c === "net") hint = " · 네트워크";
+    else if (c === "empty") hint = " · 빈 답";
+    else if (c === "json" || c === "parse") hint = " · 답 형식";
+    return c + hint;
+  }
+
+  function frPrompt(material) {
+    return [
+      "너는 한국 가정식 식단을 짜는 도우미야. 항상 JSON 객체 하나만 답해.",
+      "",
+      "[조건]",
+      "1) 아래 [냉장고 재료]를 먼저 다 쓰도록 월~토 6일 가정식 식단을 짜세요. 재료 자리에 요리 이름이 섞여 있으면(예: 육개장, 제육볶음) 그 요리를 그대로 메뉴로 넣으세요.",
+      "2) 하루 구성: '밥·국' 1줄(밥과 국·찌개를 ·로 함께), '메인' 1줄, '반찬' 1~2줄. 필요할 때만 '김치' 또는 '후식' 1줄. 하루 4~6줄.",
+      "3) 맛·영양 균형: 매운 것과 기름진 것이 같은 날 한 끼에 몰리지 않게 하고, 6일 동안 국·찌개·구이·볶음·무침·조림이 골고루 나오게 하세요.",
+      "4) 각 메뉴의 note에는 4인 기준 양념장 비율이나 조리 포인트를 한 줄로 적으세요. (예: \"간장 2 · 식초 2 · 고춧가루 1.5 · 설탕 1 (먹기 직전 버무리기)\", \"소금물에 5분 담갔다 물기 빼기\")",
+      "5) 메뉴 이름(v)은 실제 집에서 하는 한국 가정식 이름으로 20자 이내. 구분(k)은 '밥·국', '메인', '반찬', '김치', '후식' 중 하나.",
+      "",
+      "[냉장고 재료]",
+      material,
+      "",
+      "[답 형식]",
+      "{\"days\":[{\"day\":\"월\",\"menus\":[{\"k\":\"밥·국\",\"v\":\"흰쌀밥 · 두부된장국\",\"note\":\"된장 1.5 · 국물 500ml · 두부 반 모 (된장은 체에 풀어 넣기)\"}]}]}",
+      "day는 \"월\",\"화\",\"수\",\"목\",\"금\",\"토\" 여섯 개를 모두 넣고, menus는 하루 4~6개. 설명 없이 JSON만 답하세요."
+    ].join("\n");
+  }
+
+  function frBody(material, model) {
+    var gen = { responseMimeType: "application/json", temperature: 0.6, maxOutputTokens: 4096 };
+    if (/^gemini-2\.5/.test(model)) gen.thinkingConfig = { thinkingBudget: 0 };
+    return {
+      contents: [{ role: "user", parts: [{ text: frPrompt(material) }] }],
+      generationConfig: gen
+    };
+  }
+
+  function frRequest(material, cb) {
+    var cfg = { provider: "gemini", key: "" };
+    try {
+      var p = window.localStorage.getItem(FR_PROV_KEY);
+      if (p === "openai" || p === "gemini") cfg.provider = p;
+      cfg.key = String(window.localStorage.getItem(FR_KEY_KEY) || "");
+    } catch (e) {}
+    if (!cfg.key) { cb("", "nokey"); return; }
+
+    var done = false, aborted = false, ctl = null, timer = null;
+    function fin(txt, err) {
+      if (done) return;
+      done = true;
+      try { clearTimeout(timer); } catch (e) {}
+      cb(txt, err || "");
+    }
+    function call(url, body, bearer, onFail) {
+      var opts = { method: "POST", body: JSON.stringify(body), headers: { "Content-Type": "application/json" } };
+      if (bearer) opts.headers.Authorization = "Bearer " + cfg.key;
+      try { if (window.AbortController) { ctl = new AbortController(); opts.signal = ctl.signal; } } catch (e) { ctl = null; }
+      try { clearTimeout(timer); } catch (e) {}
+      timer = setTimeout(function () { aborted = true; try { if (ctl) ctl.abort(); } catch (e) {} }, 60000);
+      try {
+        fetch(url, opts).then(function (r) {
+          return r.text().then(function (txt) { return { ok: r.ok, status: r.status, txt: txt }; });
+        }).then(function (rr) {
+          if (!rr.ok) { onFail(rr.status); return; }
+          var data = null;
+          try { data = JSON.parse(rr.txt); } catch (e) { data = null; }
+          if (!data) { fin("", "json"); return; }
+          var raw = "", i;
+          if (bearer) {
+            raw = String(((((data.choices || [])[0] || {}).message) || {}).content || "");
+          } else {
+            var parts = ((((data.candidates || [])[0] || {}).content) || {}).parts || [];
+            for (i = 0; i < parts.length; i++) { if (parts[i] && parts[i].text) raw += parts[i].text; }
+          }
+          if (!raw) { fin("", "empty"); return; }
+          fin(raw, "");
+        })["catch"](function () { fin("", aborted ? "timeout" : "net"); });
+      } catch (e) { fin("", "net"); }
+    }
+    function gemini(model, isRetry) {
+      var url = "https://generativelanguage.googleapis.com/v1beta/models/" + model +
+                ":generateContent?key=" + encodeURIComponent(cfg.key);
+      call(url, frBody(material, model), false, function (status) {
+        if (!isRetry && model === FR_MODEL && (status === 400 || status === 404)) { gemini(FR_MODEL_ALT, true); return; }
+        fin("", "http" + status);
+      });
+    }
+    try {
+      if (cfg.provider === "openai") {
+        call("https://api.openai.com/v1/chat/completions", {
+          model: "gpt-4o-mini",
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: "너는 한국 가정식 식단을 짜는 도우미야. 항상 JSON 객체 하나만 답해." },
+            { role: "user", content: frPrompt(material) }
+          ]
+        }, true, function (status) { fin("", "http" + status); });
+      } else {
+        gemini(FR_MODEL, false);
+      }
+    } catch (e) { fin("", "build"); }
+  }
+
+  function frDayId(v) {
+    var s = String(v === null || v === undefined ? "" : v).toLowerCase().replace(/\s+/g, "");
+    var map = {
+      "월": "mon", "월요일": "mon", "mon": "mon", "monday": "mon",
+      "화": "tue", "화요일": "tue", "tue": "tue", "tuesday": "tue",
+      "수": "wed", "수요일": "wed", "wed": "wed", "wednesday": "wed",
+      "목": "thu", "목요일": "thu", "thu": "thu", "thursday": "thu",
+      "금": "fri", "금요일": "fri", "fri": "fri", "friday": "fri",
+      "토": "sat", "토요일": "sat", "sat": "sat", "saturday": "sat"
+    };
+    if (map[s]) return map[s];
+    var k;
+    for (k in map) {
+      if (Object.prototype.hasOwnProperty.call(map, k) && s.indexOf(k) === 0) return map[k];
+    }
+    return "";
+  }
+
+  function frParse(raw) {
+    var t = String(raw || "").replace(/```[a-zA-Z]*/g, "").replace(/```/g, "").replace(/^\s+|\s+$/g, "");
+    if (!t) return null;
+    var a = t.indexOf("{"), b = t.lastIndexOf("}");
+    if (a >= 0 && b > a) t = t.slice(a, b + 1);
+    var o = null;
+    try { o = JSON.parse(t); } catch (e) { o = null; }
+    if (!o || typeof o !== "object") return null;
+    var list = o.days || o.week || o["식단"] || o.diet || o["요일"] || (o.length ? o : null);
+    if (!list || typeof list !== "object") return null;
+    var out = {}, total = 0, i, j;
+    for (i = 0; i < list.length; i++) {
+      var d = list[i];
+      if (!d || typeof d !== "object") continue;
+      var id = frDayId(d.day || d["요일"] || d.id || d.name || d.date || "");
+      if (!id || out[id]) continue;
+      var menus = d.menus || d.list || d["메뉴"] || d.items || [];
+      if (!menus || typeof menus !== "object") continue;
+      var arr = [];
+      for (j = 0; j < menus.length; j++) {
+        var m = menus[j];
+        if (!m) continue;
+        var kk = "", vv = "", note = "";
+        if (typeof m === "string") {
+          vv = cleanText(m);
+        } else if (typeof m === "object") {
+          kk = cleanText(m.k || m.gubun || m["구분"] || m.type || m.label || "");
+          vv = cleanText(m.v || m.menu || m.name || m["메뉴"] || m.title || m.text || "");
+          note = cleanText(m.note || m.tip || m.memo || m["메모"] || m.n || "");
+        }
+        if (!vv) continue;
+        arr.push({ k: kk.slice(0, 12), v: vv.slice(0, 60), note: note.slice(0, 200) });
+      }
+      if (arr.length) { out[id] = arr; total += arr.length; }
+    }
+    if (!total) return null;
+    return { days: out, total: total };
+  }
+
+  function frApply(parsed) {
+    var oldDays = diet.days, oldSeq = (typeof diet.seq === "number" ? diet.seq : 0);
+    /* 덮어쓰기 직전 식단을 1회 백업 */
+    try {
+      window.localStorage.setItem(FR_BACKUP_KEY, JSON.stringify({
+        ver: 1,
+        at: new Date().toISOString(),
+        seq: oldSeq,
+        days: JSON.parse(JSON.stringify(oldDays))
+      }));
+    } catch (e) {}
+    diet = { ver: 1, seq: oldSeq, days: blankDays() };
+    var changed = 0;
+    each(DAYS, function (dd) {
+      var list = parsed.days[dd.id];
+      if (list && list.length) { diet.days[dd.id] = withIds(list); changed++; }
+      else diet.days[dd.id] = oldDays[dd.id] || [];
+    });
+    saveDiet();
+    each(DAYS, function (dd) { renderDay(dd.id); });
+    update();
+    frSyncUndo();
+    return changed;
+  }
+
+  function frUndo() {
+    var b = frBackup();
+    if (!b) return;
+    var keep = {};
+    each(DAYS, function (dd) {
+      each(b.days[dd.id] || [], function (it) { if (it && it.id) keep[it.id] = 1; });
+    });
+    /* 새로 짠 식단에만 있던 메뉴의 체크는 지운다 (되돌린 뒤 엉뚱한 줄이 체크되지 않게) */
+    each(DAYS, function (dd) {
+      each(diet.days[dd.id] || [], function (it) {
+        if (!it || !it.id || keep[it.id]) return;
+        try { delete store.items["i|diet-" + it.id]; } catch (e) { store.items["i|diet-" + it.id] = false; }
+      });
+    });
+    var restored = { ver: 1, seq: (typeof b.seq === "number" ? b.seq : 0), days: blankDays() };
+    each(DAYS, function (dd) {
+      var out = [];
+      each(b.days[dd.id] || [], function (it) {
+        if (!it || !it.id) return;
+        out.push({ id: String(it.id), k: cleanText(it.k), v: cleanText(it.v), note: cleanText(it.note) });
+      });
+      restored.days[dd.id] = out;
+    });
+    diet = restored;
+    saveDiet();
+    save();
+    each(DAYS, function (dd) { renderDay(dd.id); });
+    update();
+    try { window.localStorage.removeItem(FR_BACKUP_KEY); } catch (e) {}
+    frSyncUndo();
+    frMsg("↩️ 직전 식단으로 되돌렸어요 · 체크도 그대로 돌아왔어요", "ok");
+  }
+
+  function frGo() {
+    var ta = frEl("frInput");
+    var material = cleanText(ta ? ta.value : "");
+    if (!material) {
+      frMsg("냉장고 재료를 먼저 적어 주세요 (예: 부추, 오이, 두부)", "err");
+      if (ta) { try { ta.focus(); } catch (e) {} }
+      return;
+    }
+    try { window.localStorage.setItem(FR_INPUT_KEY, String(ta.value || "")); } catch (e) {}
+    frBusy(true);
+    frMsg("🤖 냉장고 재료로 식단 짜는 중...", "busy");
+    frRequest(material, function (raw, err) {
+      if (err === "nokey") {
+        frBusy(false);
+        frMsg("먼저 '비우기' 탭의 🤖 AI 자동 인식 설정에 제미나이 키를 저장해 주세요", "err");
+        return;
+      }
+      if (err) {
+        frBusy(false);
+        frMsg("냉장고 식단을 못 짰어요 (" + frErrLabel(err) + ") · 다시 눌러 보거나 AI 설정의 키를 확인해 주세요", "err");
+        return;
+      }
+      var parsed = frParse(raw);
+      if (!parsed) {
+        frBusy(false);
+        frMsg("AI 답을 식단으로 읽지 못했어요 (형식) · 다시 한 번 눌러 주세요", "err");
+        return;
+      }
+      var n = frApply(parsed);
+      frBusy(false);
+      frMsg("✨ " + n + "일 식단을 새로 짰어요 (메뉴 " + parsed.total + "개) · 다르게 짜려면 다시 누르고, 되돌리려면 [↩️ 직전 식단 되돌리기]", "ok");
+    });
+  }
+
+  function frWire() {
+    var ta = frEl("frInput");
+    if (ta) {
+      try {
+        var saved = window.localStorage.getItem(FR_INPUT_KEY);
+        if (saved) ta.value = saved;
+      } catch (e) {}
+      ta.addEventListener("input", function () {
+        try { window.localStorage.setItem(FR_INPUT_KEY, String(ta.value || "")); } catch (e) {}
+      });
+    }
+    var go = frEl("frGo");
+    if (go) go.addEventListener("click", frGo);
+    var un = frEl("frUndo");
+    if (un) un.addEventListener("click", frUndo);
+    frSyncUndo();
+  }
+
   /* 클릭: ⋯ / + 메뉴 / 처음대로 / 저장 / 삭제 / 수정 / 취소 */
   try {
     document.addEventListener("click", function (ev) {
@@ -2470,6 +2832,7 @@
   try {
     each(DAYS, function (dd) { renderDay(dd.id); });
   } catch (e) {}
+  try { frWire(); } catch (e) {}
   if (resetBtn) resetBtn.addEventListener("click", function () { setTimeout(refreshAll, 0); });
 
   update();
