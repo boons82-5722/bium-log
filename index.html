@@ -3204,7 +3204,17 @@
       restored.shop.push({ id: (s && s.id ? String(s.id) : nextSid()), t: t, on: !!(s && s.on) });
     });
     diet = restored;
-    saveDiet();
+    var anyMenu = false;
+    each(DAYS, function (dd) { if ((restored.days[dd.id] || []).length) anyMenu = true; });
+    if (!anyMenu && !restored.shop.length) {
+      /* 되돌린 결과가 '빈 주'면 저장된 적 없는 주로 되돌려 안내 카드가 다시 보이게 */
+      try { delete weeks[curWeek]; } catch (e) { weeks[curWeek] = null; }
+      weekSaved = false;
+      store.weeks = weeks;
+      save();
+    } else {
+      saveDiet();
+    }
     each(DAYS, function (dd) { renderDay(dd.id); });
     renderWeek();
     try { window.localStorage.removeItem(frBackupKey()); } catch (e) {}
