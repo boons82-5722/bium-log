@@ -629,6 +629,67 @@
   .ainote[hidden]{display:none}
   .ainote.ok{background:#e9f6ee;color:#26694a}
   .ainote.busy{background:#f3efe8;color:#7d6a58}
+  /* ===== 주차 이동 바 ===== */
+  .wkbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 11px;padding:8px 10px;
+    background:#fffdfa;border:1px solid #f2e5d5;border-radius:14px;box-shadow:0 2px 7px rgba(180,140,100,.055)}
+  .wkbtn{flex:none;width:40px;height:40px;border:1px solid #ecd9c4;border-radius:11px;background:#fffaf3;
+    color:#a4785a;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;line-height:1;padding:0}
+  .wkbtn:active{background:#fbe6d3}
+  .wklab{flex:1;min-width:0;text-align:center;font-size:13px;font-weight:800;color:#43362c;letter-spacing:-.3px;line-height:1.3}
+  .wkbadge{flex:none;font-size:10.5px;font-weight:800;color:#fff;background:#e8743b;border-radius:99px;padding:3px 8px}
+  .wktoday{flex:1 1 100%;min-height:40px;border:1px solid #e8743b;border-radius:11px;background:#fff;
+    color:#c25a25;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer}
+  .wktoday:active{background:#fde3cd}
+  .wkbar [hidden]{display:none!important}
+  .day[hidden]{display:none}
+  .prog-wrap[hidden]{display:none!important}
+
+  /* ===== 아직 식단이 없는 주차 안내 ===== */
+  .wkempty{background:linear-gradient(165deg,#fff8f1,#fdeee0);border-color:#f6d9bf}
+  .wkempty h2{margin-bottom:7px}
+  .wkempty .note{margin:0 0 10px;color:#a4815c}
+  .wkbtns{display:flex;flex-direction:column;gap:7px}
+  .wkfill{min-height:46px;border:1px solid #ecd9c4;border-radius:12px;background:#fff;color:#8d5a2c;
+    font-family:inherit;font-size:13px;font-weight:800;letter-spacing:-.2px;cursor:pointer;padding:0 11px}
+  .wkfill.go{border:0;background:#2f8fb8;color:#fff}
+  .wkfill:active{background:#fbe6d3}
+  .wkfill.go:active{background:#26799e}
+  .wkempty .wk-msg{margin:9px 1px 0;font-size:11.5px;font-weight:700;color:#8d5a2c;line-height:1.55;word-break:keep-all}
+  .wkempty .wk-msg:empty{display:none}
+  .wkempty .wk-msg.err{color:#c2451a}
+  .wkempty .wk-msg.busy{color:#2f8fb8}
+  .wkempty .wk-msg.ok{color:#26694a}
+  .wkblank{margin-top:10px;border:0;background:transparent;color:#a4785a;font-size:11.5px;font-weight:800;
+    font-family:inherit;text-decoration:underline;cursor:pointer;padding:0}
+
+  /* ===== 🛒 추가로 사야 할 장보기 ===== */
+  .shop{background:linear-gradient(165deg,#f8fcf6,#eef7ec);border-color:#d9e9d5}
+  .shop h2 .s{color:#7d9a6a}
+  .slist{margin:0}
+  .slist:empty{display:none}
+  .srow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dotted #e6efe2}
+  .srow:last-child{border-bottom:0}
+  .slab{flex:1;min-width:0;display:flex;align-items:center;cursor:pointer}
+  .sck{position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
+  .slab .box{flex:none;width:21px;height:21px;margin:0 9px 0 0;border-radius:7px;border:2px solid #cfe0c9;
+    background:#fff;transition:background .12s,border-color .12s;position:relative}
+  .sck:checked ~ .box{background:#5d9c55;border-color:#5d9c55}
+  .sck:checked ~ .box::after{content:"";display:block;width:5px;height:10px;margin:2px auto 0;
+    border:2px solid #fff;border-top:0;border-left:0;transform:rotate(43deg)}
+  .srow .txt{flex:1;min-width:0;font-size:13.5px;color:#3d4a39;line-height:1.4;word-break:keep-all}
+  .sck:checked ~ .txt{color:#a9b8a2;text-decoration:line-through}
+  .sdel{flex:none;min-height:30px;padding:0 9px;border:1px solid #dfe9da;border-radius:9px;background:#fff;
+    color:#8a9c80;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer}
+  .sdel:active{background:#eef7ec}
+  .sempty{margin:2px 0 0;font-size:11.5px;font-weight:600;color:#86987c;line-height:1.55;word-break:keep-all}
+  .sempty[hidden]{display:none}
+  .sadd{display:flex;gap:7px;margin-top:10px}
+  .sadd input{flex:1;min-width:0;min-height:42px;padding:0 11px;border:1px solid #d9e9d5;border-radius:11px;
+    background:#fff;color:#3d4a39;font-family:inherit;font-size:16px;font-weight:700}
+  .sadd input:focus{outline:0;border-color:#5d9c55;box-shadow:0 0 0 3px rgba(93,156,85,.15)}
+  .sadd button{flex:none;min-height:42px;padding:0 12px;border:0;border-radius:11px;background:#5d9c55;color:#fff;
+    font-family:inherit;font-size:12px;font-weight:800;cursor:pointer}
+  .sadd button:active{background:#4f8749}
 </style>
 </head>
 <body>
@@ -1219,17 +1280,25 @@
 
     <!-- ============ TAB 2 ============ -->
     <section class="panel" id="p2">
-      <p class="lead">이번 주(11/16 월 ~ 11/21 토) · 4인 반상 기준</p>
+      <p class="lead">주 단위로 넘기는 식단 · 4인 반상 기준</p>
+
+      <div class="wkbar" id="wkBar">
+        <button type="button" class="wkbtn" id="wkPrev" aria-label="지난 주">◀</button>
+        <span class="wklab" id="wkLabel">11월 3주 (11.16 ~ 11.21)</span>
+        <span class="wkbadge" id="wkNow" hidden>이번 주</span>
+        <button type="button" class="wkbtn" id="wkNext" aria-label="다음 주">▶</button>
+        <button type="button" class="wktoday" id="wkToday">오늘 주로</button>
+      </div>
 
       <div class="pbox prog-wrap">
         <div class="prow">
-          <span class="ptxt">이번 주 체크 <b class="prog-n">0 / 0</b></span>
+          <span class="ptxt">이 주 체크 <b class="prog-n">0 / 0</b></span>
           <span class="ptxt prog-pct">0%</span>
         </div>
         <div class="prog"><i></i></div>
       </div>
 
-      <p class="note" style="margin:-3px 2px 10px;word-break:keep-all">메뉴 하나씩 체크하면 그 줄만 지워져요 · [⋯]를 누르면 다른 요일로 옮기기·고치기·지우기가 돼요</p>
+      <p class="note" id="dayTip" style="margin:-3px 2px 10px;word-break:keep-all">메뉴 하나씩 체크하면 그 줄만 지워져요 · [⋯]를 누르면 다른 요일로 옮기기·고치기·지우기가 돼요</p>
 
       <div class="card fridge" id="fridgeCard">
         <h2>🧊 냉장고 재료로 AI 식단 짜기<small class="s">먼저 먹어야 할 재료를 적으면 월~토 6일 식단을 다시 짜 드려요</small></h2>
@@ -1239,6 +1308,18 @@
           <button type="button" class="fr-undo" id="frUndo" hidden>↩️ 직전 식단 되돌리기</button>
         </div>
         <p class="fr-msg" id="frMsg" role="status"></p>
+      </div>
+
+      <div class="card wkempty" id="wkEmpty" hidden>
+        <h2>📅 이 주는 아직 식단이 없어요<small class="s">한 번만 누르면 이 주 식단이 채워져요</small></h2>
+        <p class="note">이 주는 저장된 식단이 없어요. 아래에서 골라 한 번에 채우면 이 주 식단으로만 저장돼요.</p>
+        <div class="wkbtns">
+          <button type="button" class="wkfill go" id="wkFillAI">✨ 냉장고 재료로 이 주 식단 짜기</button>
+          <button type="button" class="wkfill" id="wkFillBase">📋 기본 집밥 식단 채우기</button>
+          <button type="button" class="wkfill" id="wkFillPrev">📑 지난주 식단 가져오기</button>
+        </div>
+        <p class="fr-msg wk-msg" id="wkMsg" role="status"></p>
+        <button type="button" class="wkblank" id="wkBlank">빈 식단으로 직접 채우기</button>
       </div>
 
       <div class="day" data-day="mon">
@@ -1386,6 +1467,16 @@
           <span class="box"></span>
           <span class="txt">총액 확인하고 결제 누르기<em>무료배송 기준은 이미 넘겼어요</em></span>
         </label>
+      </div>
+
+      <div class="card shop" id="shopCard">
+        <h2>🛒 추가로 사야 할 장보기<small class="s">냉장고 재료에 없어서 사야 하는 것 · 이 주 기준</small></h2>
+        <div class="slist" id="shopList"></div>
+        <p class="sempty" id="shopEmpty">아직 없어요 · 위 🧊 [냉장고 재료로 식단 짜기]를 누르면 이 주에 필요한 재료가 여기 담겨요</p>
+        <div class="sadd">
+          <input type="text" id="shopInput" placeholder="예: 대파 1단" autocomplete="off">
+          <button type="button" id="shopAdd">+ 장볼 것 추가</button>
+        </div>
       </div>
     </section>
 
@@ -1590,7 +1681,7 @@
   try { root.className += " js-on"; } catch (e) {}
 
   var KEY = "biumlog-checks-v1";
-  var store = { items: {}, extra: [], tab: "", menus: {} };
+  var store = { items: {}, extra: [], tab: "", menus: {}, weeks: {}, dseq: 0 };
   var canStore = false;
 
   /* 저장소 확인 (막혀 있어도 화면은 그대로 동작) */
@@ -1607,6 +1698,8 @@
         store.tab = p.tab || "";
         store.menus = (p.menus && typeof p.menus === "object") ? p.menus : {};
         store.diet = (p.diet && typeof p.diet === "object") ? p.diet : null;
+        store.weeks = (p.weeks && typeof p.weeks === "object") ? p.weeks : {};
+        store.dseq = (typeof p.dseq === "number") ? p.dseq : 0;
       }
     }
   } catch (e) { canStore = false; }
@@ -1856,8 +1949,13 @@
   }
 
   var dayRows = {};      /* 요일 → .rows */
+  var dayEls = {};       /* 요일 → .day */
   var seedItems = {};    /* 요일 → 처음 식단 [{k,v}] */
-  var diet = null;       /* {ver:1, seq:n, days:{요일:[{id,k,v}]}} */
+  var diet = null;       /* 지금 보는 주의 식단 {ver:1, days:{요일:[{id,k,v,note}]}, shop:[{id,t,on}]} */
+  var weeks = null;      /* 주차 키(그 주 월요일) → {ver:1, days:{...}, shop:[...]} */
+  var dseq = 0;          /* 메뉴·장보기 id 번호 — 주차가 달라도 겹치지 않게 전체에서 하나 */
+  var curWeek = "";      /* 지금 보고 있는 주차 키 */
+  var weekSaved = false; /* 이 주차가 저장된 적 있는지 (없으면 안내 카드) */
 
   function cleanText(s) { return String(s === null || s === undefined ? "" : s).replace(/\s+/g, " ").replace(/^ | $/g, ""); }
   function hasKey(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
@@ -1906,6 +2004,7 @@
       var rowsEl = day.querySelector(".rows");
       if (!id || !rowsEl) return;
       dayRows[id] = rowsEl;
+      dayEls[id] = day;
       var list = [];
       each(rowsEl.querySelectorAll(".row"), function (r) {
         var kEl = r.querySelector(".k"), vEl = r.querySelector(".v");
@@ -1922,9 +2021,61 @@
     each(DAYS, function (dd) { d[dd.id] = []; });
     return d;
   }
+
+  /* ===== 주차(월~토) 계산 =====
+     주차 키는 그 주 월요일 날짜(YYYY-MM-DD)다. 예: 2026-11-16 = 11/16 월 ~ 11/21 토 */
+  var SEED_WEEK = "2026-11-16";   /* 마크업에 심어 둔 기본 식단의 주 */
+  function pad2(n) { return (n < 10 ? "0" : "") + n; }
+  function ymd(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+  function parseYmd(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s === null || s === undefined ? "" : s));
+    if (!m) return null;
+    var y = Number(m[1]), mo = Number(m[2]), da = Number(m[3]);
+    var d = new Date(y, mo - 1, da);
+    if (d.getFullYear() !== y || d.getMonth() !== mo - 1 || d.getDate() !== da) return null;
+    return d;
+  }
+  function addDays(d, n) {
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() + n);
+    return x;
+  }
+  function todayDate() { var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+  function mondayOf(d) {
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var wd = x.getDay();
+    x.setDate(x.getDate() - (wd === 0 ? 6 : wd - 1));
+    return x;
+  }
+  function weekKeyOf(d) { return ymd(mondayOf(d)); }
+  function weekDates(key) {
+    var mon = parseYmd(key) || mondayOf(todayDate()), out = [];
+    for (var i = 0; i < 6; i++) out.push(addDays(mon, i));
+    return out;
+  }
+  function mdText(d) { return (d.getMonth() + 1) + "/" + d.getDate(); }
+  /* "11월 3주 (11.16 ~ 11.21)" — 주차는 일요일 시작으로 세고, 달을 넘긴 주는 월요일이 든 달의 1주 */
+  function weekLabel(key) {
+    var mon = parseYmd(key);
+    if (!mon) return String(key || "");
+    var sun = addDays(mon, -1), sat = addDays(mon, 5);
+    var mBase = sun, no;
+    if (sun.getMonth() !== mon.getMonth() || sun.getFullYear() !== mon.getFullYear()) { mBase = mon; no = 1; }
+    else no = Math.floor((sun.getDate() - 1) / 7) + 1;
+    var head = (mBase.getFullYear() !== mon.getFullYear() ? mBase.getFullYear() + "년 " : "") +
+               (mBase.getMonth() + 1) + "월 " + no + "주";
+    return head + " (" + (mon.getMonth() + 1) + "." + mon.getDate() + " ~ " + (sat.getMonth() + 1) + "." + sat.getDate() + ")";
+  }
+
   function nextId() {
-    diet.seq = (typeof diet.seq === "number" ? diet.seq : 0) + 1;
-    return "m" + diet.seq;
+    dseq = (typeof dseq === "number" ? dseq : 0) + 1;
+    store.dseq = dseq;
+    return "m" + dseq;
+  }
+  function nextSid() {
+    dseq = (typeof dseq === "number" ? dseq : 0) + 1;
+    store.dseq = dseq;
+    return "s" + dseq;
   }
   function withIds(list) {
     var out = [];
@@ -1938,31 +2089,329 @@
     });
     return out;
   }
-  function saveDiet() { store.diet = diet; save(); }
 
-  /* 저장본 읽기 / 없으면 마크업(또는 예전 요일 글 수정본)에서 시작 */
-  var savedDiet = (store.diet && store.diet.ver === 1 && store.diet.days) ? store.diet : null;
-  if (savedDiet) {
-    diet = { ver: 1, seq: typeof savedDiet.seq === "number" ? savedDiet.seq : 0, days: blankDays() };
+  /* 저장된 요일별 식단 → 지금 쓰는 모양으로 */
+  function normDays(src) {
+    var out = blankDays();
+    if (!src || typeof src !== "object") return out;
     each(DAYS, function (dd) {
-      var list = hasKey(savedDiet.days, dd.id) ? savedDiet.days[dd.id] : null;
-      if (!list) { diet.days[dd.id] = withIds(seedItems[dd.id] || []); return; }
-      var out = [];
+      var list = hasKey(src, dd.id) ? src[dd.id] : null;
+      if (!list || typeof list !== "object") return;
       each(list, function (it) {
         if (!it || !it.id) return;
-        out.push({ id: String(it.id), k: cleanText(it.k), v: cleanText(it.v), note: cleanText(it.note) });
+        out[dd.id].push({ id: String(it.id), k: cleanText(it.k), v: cleanText(it.v), note: cleanText(it && it.note ? it.note : "") });
       });
-      diet.days[dd.id] = out;
     });
-  } else {
-    diet = { ver: 1, seq: 0, days: blankDays() };
+    return out;
+  }
+  function normShop(src) {
+    var out = [];
+    if (!src || typeof src !== "object") return out;
+    for (var i = 0; i < src.length; i++) {
+      var s = src[i], t = "", on = false, id = "";
+      if (typeof s === "string") { t = cleanText(s); }
+      else if (s && typeof s === "object") {
+        t = cleanText(s.t || s.name || s.item || s.text || "");
+        on = !!s.on;
+        id = s.id ? String(s.id) : "";
+      }
+      if (!t) continue;
+      out.push({ id: id || nextSid(), t: t, on: on });
+    }
+    return out;
+  }
+  /* 마크업에 심어 둔 기본 집밥 식단 */
+  function seedDays() {
+    var d = blankDays();
+    each(DAYS, function (dd) { d[dd.id] = withIds(seedItems[dd.id] || []); });
+    return d;
+  }
+  function menusText() {
+    var t = "";
+    if (!store.menus || typeof store.menus !== "object") return t;
     each(DAYS, function (dd) {
-      var t = store.menus ? store.menus[dd.id] : "";
-      var list = (typeof t === "string" && t) ? parseLines(t) : (seedItems[dd.id] || []);
-      diet.days[dd.id] = withIds(list);
+      var v = store.menus[dd.id];
+      if (!t && typeof v === "string" && v) t = v;
     });
-    if (store.menus && typeof store.menus === "object") store.menus = {};
+    return t;
+  }
+
+  /* 기존 1주짜리 저장본을 이번 주 데이터로 옮긴다 (한 번만) */
+  function ensureWeeks() {
+    weeks = (store.weeks && typeof store.weeks === "object") ? store.weeks : {};
+    dseq = (typeof store.dseq === "number") ? store.dseq : 0;
+    var key = weekKeyOf(todayDate());
+    if (!(weeks[key] && weeks[key].days)) {
+      var d = null;
+      if (store.diet && store.diet.ver === 1 && store.diet.days) {
+        d = normDays(store.diet.days);
+        if (typeof store.diet.seq === "number" && store.diet.seq > dseq) dseq = store.diet.seq;
+      } else if (menusText()) {
+        d = blankDays();
+        each(DAYS, function (dd) {
+          var t = (store.menus && store.menus[dd.id]) || "";
+          d[dd.id] = withIds((typeof t === "string" && t) ? parseLines(t) : (seedItems[dd.id] || []));
+        });
+        store.menus = {};
+      } else {
+        d = seedDays();
+      }
+      weeks[key] = { ver: 1, days: d, shop: [] };
+      /* 이미 쓰던 id(m12 등)와 겹치지 않게 번호를 올려 둔다 */
+      var mx = 0;
+      for (var k in weeks) {
+        if (!hasKey(weeks, k) || !weeks[k]) continue;
+        var wd = weeks[k].days || {};
+        each(DAYS, function (dd2) {
+          each(wd[dd2.id] || [], function (it) {
+            var mm = /(\d+)$/.exec(String((it && it.id) || ""));
+            if (mm) mx = Math.max(mx, Number(mm[1]));
+          });
+        });
+        each(weeks[k].shop || [], function (s) {
+          var ms = /(\d+)$/.exec(String((s && s.id) || ""));
+          if (ms) mx = Math.max(mx, Number(ms[1]));
+        });
+      }
+      if (mx > dseq) dseq = mx;
+      store.dseq = dseq;
+      store.weeks = weeks;
+      save();
+    }
+  }
+
+  /* 그 주차를 화면으로 불러온다 (저장본이 없으면 빈 주) */
+  function loadWeek(key) {
+    curWeek = key;
+    var w = weeks ? weeks[key] : null;
+    weekSaved = !!(w && w.days);
+    if (weekSaved) diet = { ver: 1, days: normDays(w.days), shop: normShop(w.shop || []) };
+    else diet = { ver: 1, days: blankDays(), shop: [] };
+  }
+  /* 지금 주차만 저장 (다른 주차는 건드리지 않는다) */
+  function saveDiet() {
+    if (!diet) return;
+    if (!weeks || typeof weeks !== "object") weeks = {};
+    weeks[curWeek] = { ver: 1, days: diet.days, shop: diet.shop || [] };
+    weekSaved = true;
+    store.weeks = weeks;
+    store.dseq = dseq;
+    save();
+  }
+
+  /* ===== 🛒 추가로 사야 할 장보기 ===== */
+  function findShop(id) {
+    var shop = (diet && diet.shop) || [];
+    for (var i = 0; i < shop.length; i++) if (shop[i].id === id) return shop[i];
+    return null;
+  }
+  function makeShopRow(s) {
+    var row = document.createElement("div");
+    row.className = "srow" + (s.on ? " on" : "");
+    row.setAttribute("data-sid", s.id);
+    var lab = document.createElement("label");
+    lab.className = "slab";
+    var inp = document.createElement("input");
+    inp.type = "checkbox";
+    inp.className = "sck";
+    inp.setAttribute("data-shopck", s.id);
+    if (s.on) inp.checked = true;
+    var box = document.createElement("span");
+    box.className = "box";
+    var txt = document.createElement("span");
+    txt.className = "txt";
+    txt.textContent = s.t;
+    lab.appendChild(inp);
+    lab.appendChild(box);
+    lab.appendChild(txt);
+    var del = document.createElement("button");
+    del.type = "button";
+    del.className = "sdel";
+    del.textContent = "삭제";
+    del.setAttribute("data-shopdel", s.id);
+    row.appendChild(lab);
+    row.appendChild(del);
+    return row;
+  }
+  function renderShop() {
+    var list = document.getElementById("shopList"), empty = document.getElementById("shopEmpty");
+    if (!list) return;
+    while (list.firstChild) list.removeChild(list.firstChild);
+    var shop = (diet && diet.shop) || [];
+    each(shop, function (s) { list.appendChild(makeShopRow(s)); });
+    if (empty) empty.hidden = shop.length > 0;
+  }
+  function delShop(id) {
+    if (!diet) return;
+    var out = [];
+    each(diet.shop || [], function (s) { if (s.id !== id) out.push(s); });
+    diet.shop = out;
     saveDiet();
+    renderShop();
+  }
+  function addShop() {
+    var inp = document.getElementById("shopInput");
+    if (!inp) return;
+    var v = cleanText(inp.value);
+    if (!v || !diet) { try { inp.focus(); } catch (e) {} return; }
+    if (!diet.shop) diet.shop = [];
+    diet.shop.push({ id: nextSid(), t: v.slice(0, 60), on: false });
+    saveDiet();
+    inp.value = "";
+    renderShop();
+    try { inp.focus(); } catch (e) {}
+  }
+  function shopWire() {
+    var b = document.getElementById("shopAdd");
+    if (b) b.addEventListener("click", addShop);
+    var inp = document.getElementById("shopInput");
+    if (inp) inp.addEventListener("keydown", function (ev) {
+      if (ev && ev.key === "Enter") { ev.preventDefault(); addShop(); }
+    });
+  }
+
+  /* ===== 주차 바 · 요일 머리 · 안내 카드 ===== */
+  function renderWeekBar() {
+    var lab = document.getElementById("wkLabel");
+    if (lab) lab.textContent = weekLabel(curWeek);
+    var todayKey = weekKeyOf(todayDate());
+    var now = document.getElementById("wkNow");
+    if (now) now.hidden = (curWeek !== todayKey);
+    var td = document.getElementById("wkToday");
+    if (td) td.hidden = (curWeek === todayKey);
+  }
+  function renderWeekHeads() {
+    var dates = weekDates(curWeek), todayKey = ymd(todayDate());
+    each(DAYS, function (dd, i) {
+      var day = dayEls[dd.id];
+      if (!day) return;
+      var dn = day.querySelector(".dname");
+      if (!dn) return;
+      while (dn.firstChild) dn.removeChild(dn.firstChild);
+      var sp = document.createElement("span");
+      sp.className = "d";
+      sp.textContent = dd.label;
+      dn.appendChild(sp);
+      dn.appendChild(document.createTextNode(mdText(dates[i])));
+      var isToday = (ymd(dates[i]) === todayKey);
+      if (isToday) {
+        var b = document.createElement("span");
+        b.className = "b";
+        b.textContent = "오늘";
+        dn.appendChild(b);
+        try { day.classList.add("today"); } catch (e) {}
+      } else {
+        try { day.classList.remove("today"); } catch (e) {}
+      }
+    });
+  }
+  function renderWeek() {
+    renderWeekBar();
+    renderWeekHeads();
+    var empty = !weekSaved;
+    var guide = document.getElementById("wkEmpty");
+    if (guide) guide.hidden = !empty;
+    var tip = document.getElementById("dayTip");
+    if (tip) tip.hidden = empty;
+    var pw = document.querySelector("#p2 .prog-wrap");
+    if (pw) pw.hidden = empty;
+    each(DAYS, function (dd) {
+      var day = dayEls[dd.id];
+      if (day) day.hidden = empty;
+      renderDay(dd.id);
+    });
+    renderShop();
+    update();
+    try { frSyncUndo(); } catch (e) {}
+  }
+  function goWeek(key) {
+    if (!key || !parseYmd(key) || key === curWeek) return;
+    closeEditors();
+    closeAdds();
+    closeRowPanels();
+    closeNotes();
+    loadWeek(key);
+    renderWeek();
+  }
+  function stepWeek(n) {
+    var mon = parseYmd(curWeek) || mondayOf(todayDate());
+    goWeek(ymd(addDays(mon, n * 7)));
+  }
+
+  /* ===== 새 주차 1탭 채우기 ===== */
+  function wkMsg(text, kind) {
+    var m = document.getElementById("wkMsg");
+    if (!m) return;
+    m.textContent = text || "";
+    m.className = "fr-msg wk-msg" + (kind ? " " + kind : "");
+  }
+  function fillBase() {
+    var ok = true;
+    try { ok = window.confirm("이 주를 기본 집밥 식단으로 채울까요?"); } catch (e) { ok = true; }
+    if (!ok) return;
+    diet = { ver: 1, days: seedDays(), shop: [] };
+    saveDiet();
+    renderWeek();
+  }
+  function prevWeekSource(key) {
+    var mon = parseYmd(key);
+    if (!mon) return null;
+    var pk = ymd(addDays(mon, -7));
+    if (weeks && weeks[pk] && weeks[pk].days) return { key: pk, days: normDays(weeks[pk].days), shop: normShop(weeks[pk].shop || []) };
+    if (pk === SEED_WEEK) {
+      var s = blankDays();
+      each(DAYS, function (dd) { s[dd.id] = seedItems[dd.id] || []; });
+      return { key: pk, days: s, shop: [] };
+    }
+    return { key: pk, days: null, shop: [] };
+  }
+  function fillPrev() {
+    var p = prevWeekSource(curWeek);
+    if (!p) return;
+    if (!p.days) {
+      wkMsg("📑 " + weekLabel(p.key) + "에는 저장된 식단이 없어요 · [📋 기본 집밥 식단]으로 채우거나 위 🧊 칸에 재료를 적고 AI로 짜 보세요", "err");
+      return;
+    }
+    var copy = blankDays(), n = 0;
+    each(DAYS, function (dd) {
+      each(p.days[dd.id] || [], function (it) {
+        copy[dd.id].push({ id: nextId(), k: cleanText(it.k), v: cleanText(it.v), note: cleanText(it && it.note ? it.note : "") });
+        n++;
+      });
+    });
+    if (!n) { wkMsg("📑 " + weekLabel(p.key) + " 식단이 비어 있어 가져올 게 없어요", "err"); return; }
+    diet = { ver: 1, days: copy, shop: [] };
+    each(p.shop || [], function (s) { diet.shop.push({ id: nextSid(), t: s.t, on: false }); });
+    saveDiet();
+    renderWeek();
+  }
+  function fillAI() {
+    var ta = document.getElementById("frInput");
+    var material = cleanText(ta ? ta.value : "");
+    if (!material) {
+      wkMsg("위 🧊 입력칸에 냉장고 재료를 먼저 적어 주세요 (예: 부추, 오이, 두부) · 적어 둔 재료로 이 주 식단을 짜 드려요", "err");
+      if (ta) { try { ta.focus(); } catch (e) {} }
+      return;
+    }
+    wkMsg("🤖 이 주 식단을 짜는 중...", "busy");
+    frGo();
+  }
+  function blankWeek() {
+    diet = { ver: 1, days: blankDays(), shop: [] };
+    saveDiet();
+    renderWeek();
+  }
+  function weekWire() {
+    var p = document.getElementById("wkPrev"), n = document.getElementById("wkNext"), t = document.getElementById("wkToday");
+    if (p) p.addEventListener("click", function () { stepWeek(-1); });
+    if (n) n.addEventListener("click", function () { stepWeek(1); });
+    if (t) t.addEventListener("click", function () { goWeek(weekKeyOf(todayDate())); });
+    var a = document.getElementById("wkFillAI"), b = document.getElementById("wkFillBase"),
+        c = document.getElementById("wkFillPrev"), d = document.getElementById("wkBlank");
+    if (a) a.addEventListener("click", fillAI);
+    if (b) b.addEventListener("click", fillBase);
+    if (c) c.addEventListener("click", fillPrev);
+    if (d) d.addEventListener("click", blankWeek);
   }
 
   function findItem(dayId, itemId) {
@@ -2295,13 +2744,18 @@
   function resetDay(dayId) {
     var rowsEl = dayRows[dayId];
     if (!rowsEl) return;
+    var isSeed = (curWeek === SEED_WEEK);
     var ok = true;
-    try { ok = window.confirm(DAYNAME[dayId] + "요일 식단을 처음 상태로 되돌릴까요? (이 요일 체크도 풀려요)"); } catch (e) { ok = true; }
+    try {
+      ok = window.confirm(isSeed
+        ? DAYNAME[dayId] + "요일 식단을 처음 상태로 되돌릴까요? (이 요일 체크도 풀려요)"
+        : DAYNAME[dayId] + "요일 식단을 비울까요? (이 요일 체크도 풀려요)");
+    } catch (e) { ok = true; }
     if (!ok) return;
     each(diet.days[dayId] || [], function (it) {
       try { delete store.items["i|diet-" + it.id]; } catch (e) {}
     });
-    diet.days[dayId] = withIds(seedItems[dayId] || []);
+    diet.days[dayId] = isSeed ? withIds(seedItems[dayId] || []) : [];
     saveDiet();
     save();
     renderDay(dayId);
@@ -2487,12 +2941,13 @@
     if (!on) frSyncUndo();
   }
 
+  function frBackupKey() { return FR_BACKUP_KEY + ":" + curWeek; }
   function frBackup() {
     try {
-      var raw = window.localStorage.getItem(FR_BACKUP_KEY);
+      var raw = window.localStorage.getItem(frBackupKey());
       if (!raw) return null;
       var o = JSON.parse(raw);
-      if (o && o.days && typeof o.days === "object") return o;
+      if (o && o.days && typeof o.days === "object" && (!o.week || o.week === curWeek)) return o;
     } catch (e) {}
     return null;
   }
@@ -2530,12 +2985,13 @@
       "3) 맛·영양 균형: 매운 것과 기름진 것이 같은 날 한 끼에 몰리지 않게 하고, 6일 동안 국·찌개·구이·볶음·무침·조림이 골고루 나오게 하세요.",
       "4) 각 메뉴의 note에는 4인 기준 양념장 비율이나 조리 포인트를 한 줄로 적으세요. (예: \"간장 2 · 식초 2 · 고춧가루 1.5 · 설탕 1 (먹기 직전 버무리기)\", \"소금물에 5분 담갔다 물기 빼기\")",
       "5) 메뉴 이름(v)은 실제 집에서 하는 한국 가정식 이름으로 20자 이내. 구분(k)은 '밥·국', '메인', '반찬', '김치', '후식' 중 하나.",
+      "6) shopping에는 [냉장고 재료]에 없어서 추가로 사야 하는 재료만 '재료 + 필요한 양' 꼴로 6~12개 적으세요. 이미 있는 재료와 소금·설탕·간장·참기름 같은 기본 양념은 빼고, 장 보러 가서 바로 담아야 할 것 위주로 간결하게.",
       "",
       "[냉장고 재료]",
       material,
       "",
       "[답 형식]",
-      "{\"days\":[{\"day\":\"월\",\"menus\":[{\"k\":\"밥·국\",\"v\":\"흰쌀밥 · 두부된장국\",\"note\":\"된장 1.5 · 국물 500ml · 두부 반 모 (된장은 체에 풀어 넣기)\"}]}]}",
+      "{\"days\":[{\"day\":\"월\",\"menus\":[{\"k\":\"밥·국\",\"v\":\"흰쌀밥 · 두부된장국\",\"note\":\"된장 1.5 · 국물 500ml · 두부 반 모 (된장은 체에 풀어 넣기)\"}]}],\"shopping\":[\"대파 1단\",\"두부 1모\",\"계란 10구\"]}",
       "day는 \"월\",\"화\",\"수\",\"목\",\"금\",\"토\" 여섯 개를 모두 넣고, menus는 하루 4~6개. 설명 없이 JSON만 답하세요."
     ].join("\n");
   }
@@ -2669,31 +3125,53 @@
       if (arr.length) { out[id] = arr; total += arr.length; }
     }
     if (!total) return null;
-    return { days: out, total: total };
+    /* 추가로 사야 할 장보기 (이 필드가 없는 예전 형식 답도 받아 둔다) */
+    var shopSrc = o.shopping || o.shop || o["장보기"] || o["사야 할 것"] || o.buy || null;
+    var shopping = null;
+    if (shopSrc && typeof shopSrc === "object") {
+      var sl = [];
+      for (i = 0; i < shopSrc.length; i++) {
+        var ss = shopSrc[i], st = "";
+        if (typeof ss === "string") st = cleanText(ss);
+        else if (ss && typeof ss === "object") st = cleanText(ss.t || ss.name || ss.item || ss.text || ss["재료"] || "");
+        if (st) sl.push(st.slice(0, 40));
+      }
+      if (sl.length) shopping = sl;
+    }
+    return { days: out, total: total, shopping: shopping };
   }
 
   function frApply(parsed) {
-    var oldDays = diet.days, oldSeq = (typeof diet.seq === "number" ? diet.seq : 0);
-    /* 덮어쓰기 직전 식단을 1회 백업 */
+    var oldDays = diet.days, oldShop = diet.shop || [], oldSeq = (typeof diet.seq === "number" ? diet.seq : 0);
+    /* 덮어쓰기 직전 식단·장보기를 그 주차 기준으로 1회 백업 */
     try {
-      window.localStorage.setItem(FR_BACKUP_KEY, JSON.stringify({
+      window.localStorage.setItem(frBackupKey(), JSON.stringify({
         ver: 1,
         at: new Date().toISOString(),
+        week: curWeek,
         seq: oldSeq,
-        days: JSON.parse(JSON.stringify(oldDays))
+        days: JSON.parse(JSON.stringify(oldDays)),
+        shop: JSON.parse(JSON.stringify(oldShop))
       }));
     } catch (e) {}
-    diet = { ver: 1, seq: oldSeq, days: blankDays() };
+    diet = { ver: 1, seq: oldSeq, days: blankDays(), shop: oldShop };
     var changed = 0;
     each(DAYS, function (dd) {
       var list = parsed.days[dd.id];
       if (list && list.length) { diet.days[dd.id] = withIds(list); changed++; }
       else diet.days[dd.id] = oldDays[dd.id] || [];
     });
+    if (parsed.shopping && parsed.shopping.length) {
+      var shop = [];
+      each(parsed.shopping, function (t) {
+        var tx = cleanText(t);
+        if (tx) shop.push({ id: nextSid(), t: tx, on: false });
+      });
+      if (shop.length) diet.shop = shop;
+    }
     saveDiet();
     each(DAYS, function (dd) { renderDay(dd.id); });
-    update();
-    frSyncUndo();
+    renderWeek();
     return changed;
   }
 
@@ -2711,7 +3189,7 @@
         try { delete store.items["i|diet-" + it.id]; } catch (e) { store.items["i|diet-" + it.id] = false; }
       });
     });
-    var restored = { ver: 1, seq: (typeof b.seq === "number" ? b.seq : 0), days: blankDays() };
+    var restored = { ver: 1, seq: (typeof b.seq === "number" ? b.seq : 0), days: blankDays(), shop: [] };
     each(DAYS, function (dd) {
       var out = [];
       each(b.days[dd.id] || [], function (it) {
@@ -2720,14 +3198,18 @@
       });
       restored.days[dd.id] = out;
     });
+    each(b.shop || [], function (s) {
+      var t = cleanText(s && s.t ? s.t : s);
+      if (!t) return;
+      restored.shop.push({ id: (s && s.id ? String(s.id) : nextSid()), t: t, on: !!(s && s.on) });
+    });
     diet = restored;
     saveDiet();
-    save();
     each(DAYS, function (dd) { renderDay(dd.id); });
-    update();
-    try { window.localStorage.removeItem(FR_BACKUP_KEY); } catch (e) {}
+    renderWeek();
+    try { window.localStorage.removeItem(frBackupKey()); } catch (e) {}
     frSyncUndo();
-    frMsg("↩️ 직전 식단으로 되돌렸어요 · 체크도 그대로 돌아왔어요", "ok");
+    frMsg("↩️ 직전 식단과 장보기 목록으로 되돌렸어요 · 체크도 그대로 돌아왔어요", "ok");
   }
 
   function frGo() {
@@ -2760,7 +3242,9 @@
       }
       var n = frApply(parsed);
       frBusy(false);
-      frMsg("✨ " + n + "일 식단을 새로 짰어요 (메뉴 " + parsed.total + "개) · 다르게 짜려면 다시 누르고, 되돌리려면 [↩️ 직전 식단 되돌리기]", "ok");
+      frMsg("✨ " + n + "일 식단을 새로 짰어요 (메뉴 " + parsed.total + "개" +
+            (parsed.shopping && parsed.shopping.length ? " · 장보기 " + parsed.shopping.length + "개" : "") +
+            ") · 다르게 짜려면 다시 누르고, 되돌리려면 [↩️ 직전 식단 되돌리기]", "ok");
     });
   }
 
@@ -2795,6 +3279,7 @@
       if ((el = upAttr(t, "data-reset"))) { ev.preventDefault(); resetDay(el.getAttribute("data-reset")); return; }
       if ((el = upAttr(t, "data-edit"))) { ev.preventDefault(); openEditor(el.getAttribute("data-edit")); return; }
       if ((el = upAttr(t, "data-cancel"))) { ev.preventDefault(); closeAdds(); return; }
+      if ((el = upAttr(t, "data-shopdel"))) { ev.preventDefault(); delShop(el.getAttribute("data-shopdel")); return; }
     });
   } catch (e) {}
 
@@ -2808,6 +3293,17 @@
         var to = t.value;
         try { t.value = ""; } catch (e) {}
         if (to) moveItem(mv, to);
+        return;
+      }
+      if (typeof t.className === "string" && t.className.indexOf("sck") >= 0) {
+        var sid = t.getAttribute("data-shopck") || "";
+        var sIt = sid ? findShop(sid) : null;
+        if (sIt) {
+          sIt.on = !!t.checked;
+          saveDiet();
+          var sRow = upAttr(t, "data-sid");
+          if (sRow) sRow.className = "srow" + (sIt.on ? " on" : "");
+        }
         return;
       }
       if (typeof t.className === "string" && t.className.indexOf("item") >= 0) {
@@ -2828,10 +3324,12 @@
     });
   } catch (e) {}
 
-  /* 처음 그리기 */
-  try {
-    each(DAYS, function (dd) { renderDay(dd.id); });
-  } catch (e) {}
+  /* 처음 그리기 — 기존 1주 저장본을 이번 주로 옮기고 이번 주를 편다 */
+  try { ensureWeeks(); } catch (e) {}
+  try { loadWeek(weekKeyOf(todayDate())); } catch (e) {}
+  try { weekWire(); } catch (e) {}
+  try { shopWire(); } catch (e) {}
+  try { renderWeek(); } catch (e) {}
   try { frWire(); } catch (e) {}
   if (resetBtn) resetBtn.addEventListener("click", function () { setTimeout(refreshAll, 0); });
 
