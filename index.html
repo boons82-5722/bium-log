@@ -3675,11 +3675,13 @@
     frRequest(material, function (raw, err) {
       if (err === "nokey") {
         frBusy(false);
+        if (typeof wkMsg === "function") wkMsg("위 🧊 칸의 안내를 확인해 주세요");
         frMsg("먼저 '비우기' 탭의 🤖 AI 자동 인식 설정에 제미나이 키를 저장해 주세요", "err");
         return;
       }
       if (err) {
         frBusy(false);
+        if (typeof wkMsg === "function") wkMsg("위 🧊 칸의 안내를 확인해 주세요");
         frMsg("냉장고 식단을 못 짰어요 (" + frErrLabel(err) + ") · 다시 눌러 보거나 AI 설정의 키를 확인해 주세요", "err");
         return;
       }
