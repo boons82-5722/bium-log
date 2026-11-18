@@ -93,12 +93,40 @@
   .fridge{background:linear-gradient(165deg,#f4fbfe,#eaf6fb);border-color:#d7eaf3}
   .fridge h2{margin-bottom:7px}
   .fridge h2 .s{color:#7d9aa6}
+  .fridge .fr-add{display:flex;gap:7px;align-items:stretch}
   .fridge .fr-ta{
-    display:block;width:100%;min-height:60px;padding:10px 11px;
+    flex:1 1 auto;min-width:0;height:46px;padding:0 11px;
     border:1px solid #d5e7ef;border-radius:11px;background:#fff;color:#3c4a50;
-    font-family:inherit;font-size:16px;line-height:1.6;resize:vertical;box-sizing:border-box;
+    font-family:inherit;font-size:16px;line-height:44px;box-sizing:border-box;
+    -webkit-appearance:none;appearance:none;
   }
+  .fridge .fr-ta::placeholder{color:#9db4bd;font-size:13px;font-weight:600;letter-spacing:-.3px}
   .fridge .fr-ta:focus{outline:0;border-color:#3f9ec4;box-shadow:0 0 0 3px rgba(63,158,196,.15)}
+  .fridge .fr-addbtn{
+    flex:0 0 auto;min-height:46px;padding:0 14px;border:1px solid #bcdcea;border-radius:11px;
+    background:#eaf6fb;color:#2f8fb8;font-family:inherit;font-size:13.5px;font-weight:800;
+    letter-spacing:-.2px;cursor:pointer;white-space:nowrap;
+  }
+  .fridge .fr-addbtn:active{background:#d7edf7;border-color:#a5d1e4}
+  .fridge .fr-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .fridge .fr-chips[hidden]{display:none}
+  .fridge .fr-chip{
+    display:inline-flex;align-items:center;gap:5px;border:1px solid #bcdcea;border-radius:99px;
+    padding:7px 8px 7px 12px;background:#fff;color:#2f6f8a;font-family:inherit;
+    font-size:12.5px;font-weight:800;line-height:1;letter-spacing:-.2px;cursor:pointer;
+  }
+  .fridge .fr-chip:active{background:#ddf1fa;border-color:#8fc7dd;color:#1f6180}
+  .fridge .fr-chip i{
+    font-style:normal;display:inline-flex;align-items:center;justify-content:center;
+    width:17px;height:17px;border-radius:99px;background:#eaf6fb;color:#4f93ad;
+    font-size:12px;font-weight:800;line-height:1;
+  }
+  .fridge .fr-chip:active i{background:#c4e5f3;color:#1f6180}
+  .fridge .fr-clear{
+    margin-left:auto;align-self:center;border:0;background:transparent;padding:5px 2px;
+    color:#7d9aa6;font-family:inherit;font-size:11.5px;font-weight:800;
+    text-decoration:underline;cursor:pointer;white-space:nowrap;
+  }
   .fridge .fr-btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
   .fridge .fr-go{
     flex:1 1 100%;min-height:44px;border:0;border-radius:12px;background:#2f8fb8;color:#fff;
@@ -1368,7 +1396,13 @@
 
       <div class="card fridge" id="fridgeCard">
         <h2>🧊 냉장고 재료로 AI 식단 짜기<small class="s">먼저 먹어야 할 재료를 적으면 월~토 6일 식단을 다시 짜 드려요</small></h2>
-        <textarea class="fr-ta" id="frInput" rows="2" spellcheck="false" placeholder="예: 육개장, 제육볶음, 부추, 오이, 두부"></textarea>
+        <div class="fr-add">
+          <input class="fr-ta" id="frInput" type="text" inputmode="text" enterkeyhint="done"
+                 autocomplete="off" autocapitalize="off" spellcheck="false"
+                 placeholder="예: 육개장, 부추, 오이, 두부 (쉼표나 엔터로 추가)">
+          <button type="button" class="fr-addbtn" id="frAdd">+ 추가</button>
+        </div>
+        <div class="fr-chips" id="frChips" hidden></div>
         <div class="fr-btns">
           <button type="button" class="fr-go" id="frGo">✨ 냉장고 재료로 식단 짜기</button>
           <button type="button" class="fr-undo" id="frUndo" hidden>↩️ 직전 식단 되돌리기</button>
@@ -2636,9 +2670,9 @@
   }
   function fillAI() {
     var ta = document.getElementById("frInput");
-    var material = cleanText(ta ? ta.value : "");
+    var material = frMaterial();
     if (!material) {
-      wkMsg("위 🧊 입력칸에 냉장고 재료를 먼저 적어 주세요 (예: 부추, 오이, 두부) · 적어 둔 재료로 이 주 식단을 짜 드려요", "err");
+      wkMsg("위 🧊 칸에 냉장고 재료를 먼저 넣어 주세요 (예: 부추, 오이, 두부) · 넣어 둔 재료로 이 주 식단을 짜 드려요", "err");
       if (ta) { try { ta.focus(); } catch (e) {} }
       return;
     }
@@ -3165,13 +3199,170 @@
   /* ===== 🧊 냉장고 재료로 AI 식단 짜기 =====
      탭1의 AI 설정에 저장해 둔 키(localStorage)를 그대로 쓴다.
      새 식단을 덮어쓰기 직전의 식단은 한 번 백업해 두고 [↩️ 직전 식단 되돌리기]로 복원한다. */
-  var FR_INPUT_KEY = "biumlog-fridge-input-v1";
+  var FR_INPUT_KEY = "biumlog-fridge-input-v1";     /* 예전 쉼표 문자열 키 — 첫 로드에 태그로 옮긴다 */
+  var FR_TAGS_KEY = "biumlog-fridge-tags-v1";       /* 지금 쓰는 냉장고 재료 태그 배열 */
+  var FR_DRAFT_KEY = "biumlog-fridge-draft-v1";     /* 아직 [+ 추가]를 안 누른 입력칸 글자 */
   var FR_BACKUP_KEY = "biumlog-diet-backup-v1";
   var FR_PROV_KEY = "biumlog-ai-provider-v1";
   var FR_KEY_KEY = "biumlog-ai-key-v1";
   var FR_MODEL = "gemini-2.5-flash", FR_MODEL_ALT = "gemini-3.5-flash-lite";
 
   function frEl(id) { return document.getElementById(id); }
+
+  /* ===== 🧊 냉장고 재료 태그 =====
+     재료는 이름 배열로 저장하고, 태그를 누르면 그 재료만 바로 지운다.
+     예전 버전이 "육개장, 부추"처럼 문자열 하나로 저장해 둔 값은 첫 로드에 태그로 옮긴다. */
+  var frTags = [];
+
+  function frHasTag(name) {
+    var k = String(name || "").toLowerCase();
+    for (var i = 0; i < frTags.length; i++) {
+      if (String(frTags[i]).toLowerCase() === k) return true;
+    }
+    return false;
+  }
+
+  function frSplitNames(text) {
+    var parts = String(text === null || text === undefined ? "" : text).split(/[,，、\n\r]+/);
+    var out = [];
+    for (var i = 0; i < parts.length; i++) {
+      var nm = cleanText(parts[i]);
+      if (nm) out.push(nm);
+    }
+    return out;
+  }
+
+  function frSaveTags() {
+    try { window.localStorage.setItem(FR_TAGS_KEY, JSON.stringify(frTags)); } catch (e) {}
+    try { window.localStorage.removeItem(FR_INPUT_KEY); } catch (e) {}
+  }
+
+  function frLoadTags() {
+    frTags = [];
+    var raw = null, parsed = false;
+    try { raw = window.localStorage.getItem(FR_TAGS_KEY); } catch (e) {}
+    if (raw) {
+      try {
+        var arr = JSON.parse(raw);
+        if (arr && typeof arr.length === "number") {
+          parsed = true;
+          for (var i = 0; i < arr.length; i++) {
+            var nm = cleanText(arr[i]);
+            if (nm && !frHasTag(nm)) frTags.push(nm);
+          }
+        }
+      } catch (e) { parsed = false; }
+    }
+    if (parsed) return;                       /* 빈 배열도 '사용자가 다 지운 상태'로 본다 */
+    var legacy = null;
+    try { legacy = window.localStorage.getItem(FR_INPUT_KEY); } catch (e) {}
+    if (!legacy) return;
+    var list = frSplitNames(legacy);
+    for (var j = 0; j < list.length; j++) {
+      if (!frHasTag(list[j])) frTags.push(list[j]);
+    }
+    if (frTags.length) frSaveTags();
+    try { window.localStorage.removeItem(FR_INPUT_KEY); } catch (e) {}
+  }
+
+  function frRenderTags() {
+    var box = frEl("frChips");
+    if (!box) return;
+    while (box.firstChild) box.removeChild(box.firstChild);
+    for (var i = 0; i < frTags.length; i++) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "fr-chip";
+      b.setAttribute("data-frtag", frTags[i]);
+      b.setAttribute("aria-label", frTags[i] + " 지우기");
+      var t = document.createElement("span");
+      t.textContent = frTags[i];
+      var x = document.createElement("i");
+      x.textContent = "×";
+      b.appendChild(t);
+      b.appendChild(x);
+      box.appendChild(b);
+    }
+    if (frTags.length) {
+      var c = document.createElement("button");
+      c.type = "button";
+      c.className = "fr-clear";
+      c.setAttribute("data-frclear", "1");
+      c.textContent = "전체 비우기";
+      box.appendChild(c);
+    }
+    box.hidden = !frTags.length;
+  }
+
+  function frAddTags(list) {
+    var added = 0;
+    for (var i = 0; i < list.length; i++) {
+      var nm = cleanText(list[i]);
+      if (!nm || frHasTag(nm)) continue;
+      frTags.push(nm);
+      added++;
+    }
+    if (added) { frSaveTags(); frRenderTags(); }
+    return added;
+  }
+
+  function frClearDraft() {
+    try { window.localStorage.removeItem(FR_DRAFT_KEY); } catch (e) {}
+  }
+
+  /* 입력칸에 글자만 치고 [+ 추가]를 안 눌렀어도 태그로 옮긴다 (식단 짜기 직전 실수 방지) */
+  function frFlushInput() {
+    var inp = frEl("frInput");
+    if (!inp) return 0;
+    var n = frAddTags(frSplitNames(inp.value));
+    if (inp.value) inp.value = "";
+    frClearDraft();
+    return n;
+  }
+
+  function frMaterial() {
+    frFlushInput();
+    return frTags.join(", ");
+  }
+
+  function frAddFromInput() {
+    var inp = frEl("frInput");
+    if (!inp) return;
+    var list = frSplitNames(inp.value);
+    if (!list.length) { try { inp.focus(); } catch (e) {} return; }
+    var added = frAddTags(list);
+    inp.value = "";
+    frClearDraft();
+    if (added) {
+      frMsg("🧊 냉장고 재료 " + frTags.length + "가지 · 다 먹은 재료는 태그를 한 번 누르면 지워져요", "ok");
+    } else {
+      frMsg("이미 넣어 둔 재료예요 · 다른 재료를 적어 주세요", "err");
+    }
+    try { inp.focus(); } catch (e) {}
+  }
+
+  function frRemoveTag(name) {
+    var k = String(name || "").toLowerCase(), out = [];
+    if (!k) return;
+    for (var i = 0; i < frTags.length; i++) {
+      if (String(frTags[i]).toLowerCase() !== k) out.push(frTags[i]);
+    }
+    if (out.length === frTags.length) return;
+    frTags = out;
+    frSaveTags();
+    frRenderTags();
+    frMsg(frTags.length ? "🗑 " + name + " 지웠어요 · 남은 재료 " + frTags.length + "가지"
+                        : "🗑 " + name + " 지웠어요 · 냉장고 재료를 다 비웠어요", "ok");
+  }
+
+  function frClearAllTags() {
+    if (!frTags.length) return;
+    var n = frTags.length;
+    frTags = [];
+    frSaveTags();
+    frRenderTags();
+    frMsg("🗑 냉장고 재료 " + n + "가지를 모두 비웠어요", "ok");
+  }
 
   function frMsg(text, kind) {
     var m = frEl("frMsg");
@@ -3472,14 +3663,13 @@
   }
 
   function frGo() {
-    var ta = frEl("frInput");
-    var material = cleanText(ta ? ta.value : "");
+    var inp = frEl("frInput");
+    var material = frMaterial();
     if (!material) {
       frMsg("냉장고 재료를 먼저 적어 주세요 (예: 부추, 오이, 두부)", "err");
-      if (ta) { try { ta.focus(); } catch (e) {} }
+      if (inp) { try { inp.focus(); } catch (e) {} }
       return;
     }
-    try { window.localStorage.setItem(FR_INPUT_KEY, String(ta.value || "")); } catch (e) {}
     frBusy(true);
     frMsg("🤖 냉장고 재료로 식단 짜는 중...", "busy");
     frRequest(material, function (raw, err) {
@@ -3508,16 +3698,34 @@
   }
 
   function frWire() {
-    var ta = frEl("frInput");
-    if (ta) {
+    var inp = frEl("frInput");
+    frLoadTags();
+    frRenderTags();
+    if (inp) {
       try {
-        var saved = window.localStorage.getItem(FR_INPUT_KEY);
-        if (saved) ta.value = saved;
+        var draft = window.localStorage.getItem(FR_DRAFT_KEY);
+        if (draft) inp.value = draft;
       } catch (e) {}
-      ta.addEventListener("input", function () {
-        try { window.localStorage.setItem(FR_INPUT_KEY, String(ta.value || "")); } catch (e) {}
+      inp.addEventListener("input", function () {
+        try { window.localStorage.setItem(FR_DRAFT_KEY, String(inp.value || "")); } catch (e) {}
+      });
+      inp.addEventListener("keydown", function (ev) {
+        if (ev.keyCode !== 13 && ev.key !== "Enter") return;
+        if (ev.isComposing) return;              /* 한글 조합 중 엔터는 조합 확정 */
+        ev.preventDefault();
+        frAddFromInput();
       });
     }
+    var add = frEl("frAdd");
+    if (add) add.addEventListener("click", frAddFromInput);
+    var box = frEl("frChips");
+    if (box) box.addEventListener("click", function (ev) {
+      var t = ev.target;
+      var clear = upAttr(t, "data-frclear");
+      var chip = upAttr(t, "data-frtag");
+      if (chip) { frRemoveTag(chip.getAttribute("data-frtag")); return; }
+      if (clear || (t && t.className === "fr-clear")) { frClearAllTags(); return; }
+    });
     var go = frEl("frGo");
     if (go) go.addEventListener("click", frGo);
     var un = frEl("frUndo");
