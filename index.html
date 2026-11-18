@@ -41,9 +41,7 @@
   }
   .tabs label .ico{font-size:17px;line-height:1.15;margin-bottom:3px}
   #tab1:checked ~ .app .tabs label[for="tab1"],
-  #tab2:checked ~ .app .tabs label[for="tab2"],
-  #tab3:checked ~ .app .tabs label[for="tab3"],
-  #tab4:checked ~ .app .tabs label[for="tab4"]{
+  #tab2:checked ~ .app .tabs label[for="tab2"]{
     background:#e8743b;color:#fff;box-shadow:0 4px 10px rgba(232,116,59,.3)
   }
 
@@ -51,9 +49,7 @@
   main{padding:13px 13px 0}
   .panel{display:none}
   #tab1:checked ~ .app #p1,
-  #tab2:checked ~ .app #p2,
-  #tab3:checked ~ .app #p3,
-  #tab4:checked ~ .app #p4{display:block}
+  #tab2:checked ~ .app #p2{display:block}
 
   .lead{margin:0 2px 11px;font-size:12.5px;color:#9c8570;font-weight:600}
 
@@ -696,8 +692,6 @@
 
 <input type="radio" name="tab" id="tab1" class="tabr" checked>
 <input type="radio" name="tab" id="tab2" class="tabr">
-<input type="radio" name="tab" id="tab3" class="tabr">
-<input type="radio" name="tab" id="tab4" class="tabr">
 
 <div class="app">
   <header class="hd">
@@ -709,8 +703,6 @@
   <nav class="tabs">
     <label for="tab1"><span class="ico">🧹</span>살림 비우기</label>
     <label for="tab2"><span class="ico">🍽️</span>식단·장보기</label>
-    <label for="tab3"><span class="ico">🏫</span>직장</label>
-    <label for="tab4"><span class="ico">💰</span>집·이사</label>
   </nav>
 
   <main>
@@ -1477,192 +1469,6 @@
           <input type="text" id="shopInput" placeholder="예: 대파 1단" autocomplete="off">
           <button type="button" id="shopAdd">+ 장볼 것 추가</button>
         </div>
-      </div>
-    </section>
-
-    <!-- ============ TAB 3 ============ -->
-    <section class="panel" id="p3">
-      <p class="lead">내일(11/18 수) 출근 · 보육일지 · 큰아이 시험</p>
-
-      <div class="pbox prog-wrap">
-        <div class="prow">
-          <span class="ptxt">확인한 일 <b class="prog-n">0 / 0</b></span>
-          <span class="ptxt prog-pct">0%</span>
-        </div>
-        <div class="prog"><i></i></div>
-      </div>
-
-      <div class="card">
-        <h2>🌅 내일 (11/18 수)<small class="s">동료 교사 휴가 · 아침 등원차량 없음</small></h2>
-        <div class="warn"><b>9시 출근</b>이에요. 7시 반 아닙니다 — 당직은 다른 선생님이 서요.</div>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">차량 8시 공장 확인 결과 받았는지<em>어제 입고, 어디 고장인지에 따라 기간이 달라져요</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">학부모 통화 결과 단톡방에 올리기<em>6시 넘어 통화하기로 한 건 오늘 안에</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">10시 30분 생일잔치 준비<em>지난 생일 원아 확인</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">이번 주 원내 일정 챙기기<em>11/19 목 실내놀이터 · 11/20 금 도서관</em></span>
-        </label>
-      </div>
-
-      <div class="card">
-        <h2>📋 11월 2주 보육일지<small class="s">담당 학급 · 확인만 남았어요</small></h2>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">원아 출국 반영 확인<em>출석 3 / 결석 1 · 사유 '출국'</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">안전교육 실제 진행 여부 확인<em>계획안 주제 '(실종·유괴) 큰소리로 도움을 청해요'</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">11/12 뮤지컬 버스 · 11/13 통학로 공사 반영분 확인<em>알림장에 안전교육 기록이 없어 계획안에 맞춰 넣은 부분</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">4페이지 출결 표 숫자 칸 글꼴 안 깨졌는지 확인</span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">최종 파일 열어서 저장본 확인<em>파일명·날짜 확인</em></span>
-        </label>
-      </div>
-
-      <div class="card">
-        <h2>📚 큰아이 학교 일정<small class="s">기말고사 기간 · 내일이 마지막 날</small></h2>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">사회 예상문제 50제 풀렸는지 확인<em>Ⅸ단원 20 + Ⅹ단원 20 + Ⅷ 후반 10, 해설까지 있어요</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">내일 남은 과목 챙기기<em>전 과목 객관식이에요</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">11/19(목)은 수능일 재량휴업<em>아이는 학교 안 가요</em></span>
-        </label>
-      </div>
-    </section>
-
-    <!-- ============ TAB 4 ============ -->
-    <section class="panel" id="p4">
-      <p class="lead">전세 체크 · 새 일 준비 · 이사 준비</p>
-
-      <div class="pbox prog-wrap">
-        <div class="prow">
-          <span class="ptxt">확인한 일 <b class="prog-n">0 / 0</b></span>
-          <span class="ptxt prog-pct">0%</span>
-        </div>
-        <div class="prog"><i></i></div>
-      </div>
-
-      <div class="card">
-        <h2>🏢 지금 집 전세 체크<small class="s">가격 조정 시점까지 기다리는 중</small></h2>
-        <div class="kv"><span class="k">내놓은 곳</span><span class="v">한 곳만 유지 (복수 등록 안 함)</span></div>
-        <div class="kv"><span class="k">비교 기준</span><span class="v">같은 단지 · 비슷한 층 최근 거래 <b>3건</b></span></div>
-        <div class="kv"><span class="k">막히는 이유</span><span class="v">전세가율이 높으면 세입자 대출·보증보험 심사에서 걸려요. <b>한 단계 내리면</b> 여지가 생깁니다</span></div>
-        <div class="warn">결정: <b>중개사 1곳 유지</b> → 정한 날까지 대기 → 소식 없으면 <b>다음 달 초에 가격 조정</b></div>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">정한 날까지 기다리기<em>중개사 '걱정 말라'는 말은 기다리라는 뜻이에요</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">문의 온 손님 응대 기준 정하기</span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">가격 조정 실행<em>한 단계 내려 최저가 되기</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">세입자 도장 받는 마지막 기한 정하기<em>입주일에서 역산해 두기</em></span>
-        </label>
-        <p class="note">방어선: 최저가 기준으로 잔금 계산을 미리 해 두기 — 넘기는지 미리 확인.</p>
-      </div>
-
-      <div class="card">
-        <h2>🌱 새 일 준비<small class="s">계약금만 낸 상태 · 조건 확인 중</small></h2>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">이름 변경 가능 여부·시점 서면으로 확인</span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">반편성 확정<em>방 5개 기준, 한 방에 몇 명까지인지</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">그림책 레지오 운영 방침 — 원장·교사 동의</span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">교사 승계 · 임대 조건 · 권리금 서면 확인</span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">잔금 일정 정리<em>세입자 입주일 전까지</em></span>
-        </label>
-      </div>
-
-      <div class="card">
-        <h2>📦 이사 로드맵<small class="s">살림 반 줄인 상태로 나가기</small></h2>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">새 집 월세 조건 확정<em>면적·보증금·월세 두 곳 비교</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">이사 업체 견적 2곳 받기</span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">안 가져갈 가전·가구 처분<em>정리하면서 체크한 것부터</em></span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">전입신고·주소 이전 서류 준비</span>
-        </label>
-        <label class="item-row">
-          <input type="checkbox" class="item">
-          <span class="box"></span>
-          <span class="txt">포장은 박스 30개 이하로<em>그게 '반 줄이기' 성공 기준이에요</em></span>
-        </label>
       </div>
     </section>
 
