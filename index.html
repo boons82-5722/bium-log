@@ -686,6 +686,74 @@
   .sadd button{flex:none;min-height:42px;padding:0 12px;border:0;border-radius:11px;background:#5d9c55;color:#fff;
     font-family:inherit;font-size:12px;font-weight:800;cursor:pointer}
   .sadd button:active{background:#4f8749}
+
+  /* ===== 💰 한 달 식비(장보기 + 배달) ===== */
+  .fsum{background:linear-gradient(165deg,#fff7ef,#fdeada);border-color:#f6d3b4}
+  .fsum h2 .s{color:#b5855e}
+  .fsum .fsline1{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;font-size:13px;font-weight:800;color:#7a5637}
+  .fsum .fsline1 .fsm{font-size:15px;font-weight:900;color:#c25a25}
+  .fsum .fsline1 b{font-size:19px;font-weight:900;color:#3a2d24;letter-spacing:-.4px}
+  .fsum .fsline2{margin-top:5px;font-size:12px;font-weight:700;color:#9b7a5c}
+  .fsum .fsline2 b{font-weight:800;color:#6d5138}
+  .fsum .fsline2 em{font-style:normal;color:#d3bda7;margin:0 3px}
+
+  /* ===== 🛵 요일별 배달 기록 ===== */
+  .dlist{padding:0 12px 8px}
+  .dlist:empty{display:none}
+  .drow{display:flex;align-items:center;gap:6px;padding:4px 0;border-top:1px dotted #f6ece1}
+  .dbadge{flex:none;font-size:10px;font-weight:800;color:#fff;background:#2f8fb8;border-radius:99px;padding:2px 7px}
+  .dmenu{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:#3d4a39;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .damt{flex:none;font-size:12.5px;font-weight:800;color:#c25a25}
+  .dmini{flex:none;min-height:28px;padding:0 7px;border:1px solid #e6dccf;border-radius:8px;background:#fff;
+    color:#9a846f;font-size:10.5px;font-weight:800;font-family:inherit;cursor:pointer}
+  .dmini.del{color:#c2451a;border-color:#f0d6c9}
+  .dfoot{display:flex;justify-content:flex-end;padding-top:5px}
+  .dfoot-btn{min-height:30px;padding:0 10px;border:1px dashed #e6c9ad;border-radius:9px;background:#fffaf3;
+    color:#a4785a;font-size:11.5px;font-weight:800;font-family:inherit;cursor:pointer}
+  .dfoot-btn:active{background:#fbe6d3}
+  .dpanel{padding:8px 12px 11px;background:#fffaf3;border-top:1px solid #f4e3d0}
+  .dpanel .dpline{display:flex;gap:6px;margin-bottom:6px}
+  .dpanel input{flex:1;min-width:0;min-height:40px;padding:0 10px;border:1px solid #ecdcc8;border-radius:10px;
+    background:#fff;color:#4a3f36;font-family:inherit;font-size:16px;font-weight:700}
+  .dpanel input:focus{outline:0;border-color:#e8743b;box-shadow:0 0 0 3px rgba(232,116,59,.13)}
+  .dpanel input.dpamt{flex:none;width:118px}
+  .dpanel .dpbtns{display:flex;gap:6px}
+  .dpanel .dpbtns button{min-height:40px;border-radius:10px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
+  .dpsave{flex:2;border:0;background:#2f8fb8;color:#fff}
+  .dpcancel{flex:1;border:1px solid #ecdcc8;background:#fff;color:#a4785a}
+
+  /* ===== 🔗 주문 사이트 바로가기 ===== */
+  .slinks{display:flex;gap:6px;margin:0 0 10px}
+  .slinks a{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;min-height:40px;
+    padding:0 6px;border:1px solid #d9e9d5;border-radius:11px;background:#fff;color:#4d7a45;
+    font-size:12px;font-weight:800;text-decoration:none;letter-spacing:-.3px}
+  .slinks a:active{background:#eef7ec}
+  .slinks a .em{margin-right:4px;font-size:13px}
+
+  /* ===== 💳 장본 금액 기록 ===== */
+  .spendbox{margin-top:12px;padding-top:11px;border-top:1px solid #e2efdd}
+  .spendbox h3{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin:0 0 7px;
+    font-size:12.5px;font-weight:800;color:#5f7d53}
+  .spendbox h3 b{font-size:13px;font-weight:900;color:#3d4a39}
+  .spfrm{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .spfrm select,.spfrm input{min-height:40px;min-width:0;padding:0 9px;border:1px solid #d9e9d5;border-radius:10px;
+    background:#fff;color:#3d4a39;font-family:inherit;font-size:15px;font-weight:700}
+  .spfrm select{font-size:13.5px}
+  .spfrm input:focus,.spfrm select:focus{outline:0;border-color:#5d9c55;box-shadow:0 0 0 3px rgba(93,156,85,.15)}
+  .spfrm #spMemo,.spfrm #spAdd{grid-column:1 / -1}
+  .spfrm #spAdd{min-height:42px;border:0;border-radius:11px;background:#5d9c55;color:#fff;
+    font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
+  .spfrm #spAdd:active{background:#4f8749}
+  .splist{margin:8px 0 0}
+  .splist:empty{display:none}
+  .sprow{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px dotted #e6efe2}
+  .sprow:last-child{border-bottom:0}
+  .spd{flex:none;font-size:11px;font-weight:800;color:#8a9c80}
+  .spsrc{flex:none;font-size:11px;font-weight:800;color:#4d7a45;background:#eef7ec;border-radius:99px;padding:1px 7px}
+  .spmemo{flex:1;min-width:0;color:#6b7a63;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .spamt{flex:none;font-size:12.5px;font-weight:800;color:#3d4a39}
+  .spdel{flex:none;min-height:28px;padding:0 8px;border:1px solid #dfe9da;border-radius:8px;background:#fff;
+    color:#8a9c80;font-size:10.5px;font-weight:800;font-family:inherit;cursor:pointer}
 </style>
 </head>
 <body>
@@ -1282,6 +1350,12 @@
         <button type="button" class="wktoday" id="wkToday">오늘 주로</button>
       </div>
 
+      <div class="card fsum" id="foodSum">
+        <h2>💰 한 달 식비<small class="s">이 주가 든 달 기준 · 장보기 + 배달</small></h2>
+        <div class="fsline1"><span class="fsm" id="fsMon">11월</span> 식비 총합 <b id="fsTotal">0원</b></div>
+        <div class="fsline2">장보기 <b id="fsShop">0원</b><em>·</em>배달 <b id="fsDeliv">0원</b></div>
+      </div>
+
       <div class="pbox prog-wrap">
         <div class="prow">
           <span class="ptxt">이 주 체크 <b class="prog-n">0 / 0</b></span>
@@ -1463,11 +1537,32 @@
 
       <div class="card shop" id="shopCard">
         <h2>🛒 추가로 사야 할 장보기<small class="s">냉장고 재료에 없어서 사야 하는 것 · 이 주 기준</small></h2>
+        <div class="slinks">
+          <a href="https://www.kurly.com" target="_blank" rel="noopener noreferrer"><span class="em">🥬</span>마켓컬리</a>
+          <a href="https://www.coupang.com" target="_blank" rel="noopener noreferrer"><span class="em">📦</span>쿠팡</a>
+          <a href="https://shop.hansalim.or.kr" target="_blank" rel="noopener noreferrer"><span class="em">🌿</span>한살림</a>
+        </div>
         <div class="slist" id="shopList"></div>
         <p class="sempty" id="shopEmpty">아직 없어요 · 위 🧊 [냉장고 재료로 식단 짜기]를 누르면 이 주에 필요한 재료가 여기 담겨요</p>
         <div class="sadd">
           <input type="text" id="shopInput" placeholder="예: 대파 1단" autocomplete="off">
           <button type="button" id="shopAdd">+ 장볼 것 추가</button>
+        </div>
+        <div class="spendbox">
+          <h3><span>💳 장본 금액 기록</span>이 달 장보기 <b id="spendSum">0원</b></h3>
+          <div class="spfrm">
+            <select id="spSrc" aria-label="산 곳">
+              <option value="마켓컬리">마켓컬리</option>
+              <option value="쿠팡">쿠팡</option>
+              <option value="한살림">한살림</option>
+              <option value="마트·기타">마트·기타</option>
+            </select>
+            <input type="text" id="spAmt" inputmode="numeric" placeholder="금액(원)" autocomplete="off">
+            <input type="text" id="spMemo" placeholder="메모 (선택)" autocomplete="off">
+            <button type="button" id="spAdd">+ 장본 금액 기록</button>
+          </div>
+          <div class="splist" id="spendList"></div>
+          <p class="sempty" id="spendEmpty">이 달 장보기 기록이 아직 없어요</p>
         </div>
       </div>
     </section>
@@ -1487,7 +1582,7 @@
   try { root.className += " js-on"; } catch (e) {}
 
   var KEY = "biumlog-checks-v1";
-  var store = { items: {}, extra: [], tab: "", menus: {}, weeks: {}, dseq: 0 };
+  var store = { items: {}, extra: [], tab: "", menus: {}, weeks: {}, dseq: 0, food: { del: [], shop: [] } };
   var canStore = false;
 
   /* 저장소 확인 (막혀 있어도 화면은 그대로 동작) */
@@ -1506,6 +1601,7 @@
         store.diet = (p.diet && typeof p.diet === "object") ? p.diet : null;
         store.weeks = (p.weeks && typeof p.weeks === "object") ? p.weeks : {};
         store.dseq = (typeof p.dseq === "number") ? p.dseq : 0;
+        store.food = (p.food && typeof p.food === "object") ? p.food : { del: [], shop: [] };
       }
     }
   } catch (e) { canStore = false; }
@@ -2076,6 +2172,350 @@
     });
   }
 
+  /* ===== 💰 식비 기록(장보기 · 배달)과 그 달 합산 =====
+     식비는 주차와 상관없이 실제 날짜(YYYY-MM-DD)로 저장해서, 달이 바뀌어도 그 달 것만 더한다. */
+  var FOOD_SRC = ["마켓컬리", "쿠팡", "한살림", "마트·기타"];
+  var fseq = 0;
+
+  function foodData() {
+    if (!store.food || typeof store.food !== "object") store.food = {};
+    if (!store.food.del || typeof store.food.del !== "object") store.food.del = [];
+    if (!store.food.shop || typeof store.food.shop !== "object") store.food.shop = [];
+    return store.food;
+  }
+  function money(n) {
+    var v = Math.round(Number(n) || 0);
+    if (v < 0) v = 0;
+    return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "원";
+  }
+  function digitsOf(s) { return String(s === null || s === undefined ? "" : s).replace(/[^0-9]/g, ""); }
+  function amtOf(s) {
+    var d = digitsOf(s);
+    if (!d) return 0;
+    var n = Number(d);
+    if (!isFinite(n) || n < 0) return 0;
+    return Math.min(Math.round(n), 99999999);
+  }
+  function fsrcOk(s) {
+    var ok = false;
+    each(FOOD_SRC, function (x) { if (x === s) ok = true; });
+    return ok;
+  }
+  function nextFid() { fseq += 1; return "f" + fseq; }
+
+  /* 저장된 식비 기록을 지금 쓰는 모양으로 (날짜·금액 검사, id 없는 것 채우기) */
+  function normFood() {
+    var f = foodData(), del = [], shop = [], mx = fseq, i;
+    function takeId(v) {
+      var s = String(v === null || v === undefined ? "" : v), m = /(\d+)$/.exec(s);
+      var n = m ? Number(m[1]) : 0;
+      if (n > mx) mx = n;
+      return s;
+    }
+    function newId() { mx += 1; return "f" + mx; }
+    for (i = 0; i < f.del.length; i++) {
+      var d = f.del[i];
+      if (!d || typeof d !== "object") continue;
+      var dDate = parseYmd(d.date), menu = cleanText(d.menu);
+      if (!dDate || !menu) continue;
+      var dId = takeId(d.id);
+      del.push({ id: dId || newId(), date: ymd(dDate), menu: menu.slice(0, 40), amt: amtOf(d.amt) });
+    }
+    for (i = 0; i < f.shop.length; i++) {
+      var s = f.shop[i];
+      if (!s || typeof s !== "object") continue;
+      var sDate = parseYmd(s.date);
+      if (!sDate) continue;
+      var src = cleanText(s.src), sId = takeId(s.id);
+      shop.push({ id: sId || newId(), date: ymd(sDate), src: fsrcOk(src) ? src : FOOD_SRC[3],
+                  memo: cleanText(s.memo).slice(0, 40), amt: amtOf(s.amt) });
+    }
+    f.del = del;
+    f.shop = shop;
+    fseq = mx;
+  }
+
+  /* 지금 보고 있는 주의 날짜들 · 그 주가 든 달 */
+  function foodDayDate(dayId) {
+    var ds = weekDates(curWeek);
+    for (var i = 0; i < DAYS.length; i++) if (DAYS[i].id === dayId) return ymd(ds[i]);
+    return "";
+  }
+  function dayIdOfDate(date) {
+    var ds = weekDates(curWeek);
+    for (var i = 0; i < DAYS.length; i++) if (ymd(ds[i]) === date) return DAYS[i].id;
+    return "";
+  }
+  function weekMonth() {
+    var mon = parseYmd(curWeek) || todayDate();
+    return { y: mon.getFullYear(), m: mon.getMonth() + 1,
+             key: mon.getFullYear() + "-" + pad2(mon.getMonth() + 1) };
+  }
+  /* 지금 보는 주 안에 오늘이 있으면 오늘, 아니면 그 주 월요일 */
+  function foodEntryDate() {
+    var t = ymd(todayDate()), ds = weekDates(curWeek);
+    for (var i = 0; i < ds.length; i++) if (ymd(ds[i]) === t) return t;
+    return ymd(ds[0]);
+  }
+  function monthSums() {
+    var mk = weekMonth().key, f = foodData(), shop = 0, del = 0, i;
+    for (i = 0; i < f.shop.length; i++) if (String(f.shop[i].date).slice(0, 7) === mk) shop += Number(f.shop[i].amt) || 0;
+    for (i = 0; i < f.del.length; i++) if (String(f.del[i].date).slice(0, 7) === mk) del += Number(f.del[i].amt) || 0;
+    return { shop: shop, del: del, total: shop + del };
+  }
+  function renderFunds() {
+    var wm = weekMonth(), sum = monthSums();
+    var mEl = document.getElementById("fsMon"), tEl = document.getElementById("fsTotal");
+    var sEl = document.getElementById("fsShop"), dEl = document.getElementById("fsDeliv");
+    if (mEl) mEl.textContent = wm.m + "월";
+    if (tEl) tEl.textContent = money(sum.total);
+    if (sEl) sEl.textContent = money(sum.shop);
+    if (dEl) dEl.textContent = money(sum.del);
+  }
+
+  /* ===== 🛵 요일별 배달 기록 ===== */
+  function findDeliv(id) {
+    var f = foodData();
+    for (var i = 0; i < f.del.length; i++) if (f.del[i].id === id) return f.del[i];
+    return null;
+  }
+  function delivInDay(dayId) {
+    var date = foodDayDate(dayId), f = foodData(), out = [];
+    for (var i = 0; i < f.del.length; i++) if (f.del[i].date === date) out.push(f.del[i]);
+    return out;
+  }
+  function makeDelivRow(it) {
+    var row = document.createElement("div");
+    row.className = "drow";
+    row.setAttribute("data-fid", it.id);
+    var bg = document.createElement("span");
+    bg.className = "dbadge";
+    bg.textContent = "🛵 배달";
+    var nm = document.createElement("span");
+    nm.className = "dmenu";
+    nm.textContent = it.menu;
+    var am = document.createElement("span");
+    am.className = "damt";
+    am.textContent = money(it.amt);
+    var ed = document.createElement("button");
+    ed.type = "button";
+    ed.className = "dmini";
+    ed.textContent = "수정";
+    ed.setAttribute("aria-label", it.menu + " 배달 기록 수정");
+    var dl = document.createElement("button");
+    dl.type = "button";
+    dl.className = "dmini del";
+    dl.textContent = "삭제";
+    dl.setAttribute("aria-label", it.menu + " 배달 기록 삭제");
+    row.appendChild(bg);
+    row.appendChild(nm);
+    row.appendChild(am);
+    row.appendChild(ed);
+    row.appendChild(dl);
+    ed.addEventListener("click", function () {
+      var dId = dayIdOfDate(it.date);
+      if (dId) openDelivForm(dId, it.id);
+    });
+    dl.addEventListener("click", function () { delDeliv(it.id); });
+    return row;
+  }
+  function renderDeliv(dayId) {
+    var day = dayEls[dayId];
+    if (!day) return;
+    var box = day.querySelector(".dlist");
+    if (!box) {
+      box = document.createElement("div");
+      box.className = "dlist";
+      day.appendChild(box);
+    }
+    while (box.firstChild) box.removeChild(box.firstChild);
+    each(delivInDay(dayId), function (it) { box.appendChild(makeDelivRow(it)); });
+    var foot = document.createElement("div");
+    foot.className = "dfoot";
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "dfoot-btn";
+    b.textContent = "+ 🛵 배달";
+    b.setAttribute("aria-label", DAYNAME[dayId] + "요일 배달 기록 추가");
+    b.addEventListener("click", function () { openDelivForm(dayId, ""); });
+    foot.appendChild(b);
+    box.appendChild(foot);
+  }
+  function delDeliv(id) {
+    var f = foodData(), out = [], dayId = "";
+    for (var i = 0; i < f.del.length; i++) {
+      if (f.del[i].id === id) { dayId = dayIdOfDate(f.del[i].date); continue; }
+      out.push(f.del[i]);
+    }
+    f.del = out;
+    save();
+    if (dayId) renderDeliv(dayId);
+    renderFunds();
+  }
+  function closeDelivForm() {
+    each(document.querySelectorAll("#p2 .dpanel"), function (p) {
+      if (p.parentNode) p.parentNode.removeChild(p);
+    });
+  }
+  function openDelivForm(dayId, id) {
+    var day = dayEls[dayId];
+    if (!day) return;
+    var already = day.querySelector(".dpanel");
+    closeDelivForm();
+    if (already) return;          /* 같은 버튼을 다시 누르면 접기 */
+    var rec = id ? findDeliv(id) : null;
+    var box = document.createElement("div");
+    box.className = "dpanel";
+    var l1 = document.createElement("div");
+    l1.className = "dpline";
+    var mIn = document.createElement("input");
+    mIn.type = "text";
+    mIn.className = "dpmenu";
+    mIn.setAttribute("autocomplete", "off");
+    mIn.setAttribute("placeholder", "배달 메뉴 (예: 교촌치킨)");
+    mIn.value = rec ? rec.menu : "";
+    l1.appendChild(mIn);
+    var l2 = document.createElement("div");
+    l2.className = "dpline";
+    var aIn = document.createElement("input");
+    aIn.type = "text";
+    aIn.className = "dpamt";
+    aIn.setAttribute("inputmode", "numeric");
+    aIn.setAttribute("placeholder", "금액(원)");
+    aIn.value = rec ? String(rec.amt || "") : "";
+    l2.appendChild(aIn);
+    var bt = document.createElement("div");
+    bt.className = "dpbtns";
+    var sv = document.createElement("button");
+    sv.type = "button";
+    sv.className = "dpsave";
+    sv.textContent = rec ? "저장" : "추가";
+    var cn = document.createElement("button");
+    cn.type = "button";
+    cn.className = "dpcancel";
+    cn.textContent = "취소";
+    bt.appendChild(sv);
+    bt.appendChild(cn);
+    box.appendChild(l1);
+    box.appendChild(l2);
+    box.appendChild(bt);
+    day.appendChild(box);
+    try { mIn.focus(); } catch (e) {}
+
+    function commit() {
+      var menu = cleanText(mIn.value);
+      var amt = amtOf(aIn.value);
+      if (!menu) { try { mIn.focus(); } catch (e) {} return; }
+      var f = foodData();
+      if (rec) {
+        rec.menu = menu.slice(0, 40);
+        rec.amt = amt;
+      } else {
+        var date = foodDayDate(dayId);
+        if (!date) return;
+        f.del.push({ id: nextFid(), date: date, menu: menu.slice(0, 40), amt: amt });
+      }
+      save();
+      closeDelivForm();
+      renderDeliv(dayId);
+      renderFunds();
+    }
+    sv.addEventListener("click", commit);
+    cn.addEventListener("click", closeDelivForm);
+    mIn.addEventListener("keydown", function (ev) { if (ev && ev.key === "Enter") { ev.preventDefault(); commit(); } });
+    aIn.addEventListener("keydown", function (ev) { if (ev && ev.key === "Enter") { ev.preventDefault(); commit(); } });
+  }
+
+  /* ===== 💳 장본 금액 기록 ===== */
+  function makeSpendRow(it) {
+    var row = document.createElement("div");
+    row.className = "sprow";
+    var d = document.createElement("span");
+    d.className = "spd";
+    d.textContent = it.date.slice(5, 7) + "/" + it.date.slice(8, 10);
+    var src = document.createElement("span");
+    src.className = "spsrc";
+    src.textContent = it.src;
+    var mm = document.createElement("span");
+    mm.className = "spmemo";
+    mm.textContent = it.memo || "";
+    var am = document.createElement("span");
+    am.className = "spamt";
+    am.textContent = money(it.amt);
+    var del = document.createElement("button");
+    del.type = "button";
+    del.className = "spdel";
+    del.textContent = "삭제";
+    del.setAttribute("aria-label", (it.memo || it.src) + " 장보기 기록 삭제");
+    del.addEventListener("click", function () { delSpend(it.id); });
+    row.appendChild(d);
+    row.appendChild(src);
+    row.appendChild(mm);
+    row.appendChild(am);
+    row.appendChild(del);
+    return row;
+  }
+  function renderSpend() {
+    var list = document.getElementById("spendList");
+    var empty = document.getElementById("spendEmpty");
+    var sumEl = document.getElementById("spendSum");
+    if (!list) return;
+    while (list.firstChild) list.removeChild(list.firstChild);
+    var mk = weekMonth().key, f = foodData(), n = 0, sum = 0, i;
+    for (i = 0; i < f.shop.length; i++) {
+      if (String(f.shop[i].date).slice(0, 7) !== mk) continue;
+      list.appendChild(makeSpendRow(f.shop[i]));
+      sum += Number(f.shop[i].amt) || 0;
+      n++;
+    }
+    if (empty) empty.hidden = n > 0;
+    if (sumEl) sumEl.textContent = money(sum);
+  }
+  function delSpend(id) {
+    var f = foodData(), out = [];
+    for (var i = 0; i < f.shop.length; i++) if (f.shop[i].id !== id) out.push(f.shop[i]);
+    f.shop = out;
+    save();
+    renderSpend();
+    renderFunds();
+  }
+  function addSpend() {
+    var sel = document.getElementById("spSrc");
+    var memoIn = document.getElementById("spMemo");
+    var amtIn = document.getElementById("spAmt");
+    if (!sel || !amtIn) return;
+    var amt = amtOf(amtIn.value);
+    if (!amt) { try { amtIn.focus(); } catch (e) {} return; }
+    var src = sel.value || FOOD_SRC[3];
+    foodData().shop.push({
+      id: nextFid(),
+      date: foodEntryDate(),
+      src: fsrcOk(src) ? src : FOOD_SRC[3],
+      memo: cleanText(memoIn ? memoIn.value : "").slice(0, 40),
+      amt: amt
+    });
+    save();
+    amtIn.value = "";
+    if (memoIn) memoIn.value = "";
+    renderSpend();
+    renderFunds();
+    try { amtIn.focus(); } catch (e) {}
+  }
+  function spendWire() {
+    var b = document.getElementById("spAdd");
+    if (b) b.addEventListener("click", addSpend);
+    function ent(ev) { if (ev && ev.key === "Enter") { ev.preventDefault(); addSpend(); } }
+    var amtIn = document.getElementById("spAmt");
+    var memoIn = document.getElementById("spMemo");
+    if (amtIn) amtIn.addEventListener("keydown", ent);
+    if (memoIn) memoIn.addEventListener("keydown", ent);
+  }
+  function renderFoodAll() {
+    each(DAYS, function (dd) { renderDeliv(dd.id); });
+    renderFunds();
+    renderSpend();
+  }
+
   /* ===== 주차 바 · 요일 머리 · 안내 카드 ===== */
   function renderWeekBar() {
     var lab = document.getElementById("wkLabel");
@@ -2128,6 +2568,7 @@
       renderDay(dd.id);
     });
     renderShop();
+    try { renderFoodAll(); } catch (e) {}
     update();
     try { frSyncUndo(); } catch (e) {}
   }
@@ -3146,6 +3587,8 @@
   try { loadWeek(weekKeyOf(todayDate())); } catch (e) {}
   try { weekWire(); } catch (e) {}
   try { shopWire(); } catch (e) {}
+  try { normFood(); } catch (e) {}
+  try { spendWire(); } catch (e) {}
   try { renderWeek(); } catch (e) {}
   try { frWire(); } catch (e) {}
   if (resetBtn) resetBtn.addEventListener("click", function () { setTimeout(refreshAll, 0); });
