@@ -4057,7 +4057,7 @@
     for (i = 0; i < SEED_IDS.length; i++) {
       if (SEEDS[SEED_IDS[i]].date === ds && !seedGone(SEED_IDS[i])) out.push(seedRec(SEED_IDS[i]));
     }
-    out.sort(function (a, b) { return a.ts < b.ts ? -1 : (a.ts > b.ts ? 1 : 0); });
+    out.sort(function (a, b) { return a.ts < b.ts ? 1 : (a.ts > b.ts ? -1 : 0); });  /* 최신 순: 새로 올린 기록이 위 */
     return out;
   }
 
