@@ -592,6 +592,12 @@
   .addbox .exifnote[hidden]{display:none}
   .addbox .exifnote.mute{border-style:solid;border-color:#efe0cd;background:#fffdf9;color:#a48d79;font-weight:700}
 
+  /* ===== 여러 장 한꺼번에 올리기 ===== */
+  .addbox .manynote{margin:7px 0 0;padding:7px 9px;border:1px dashed #e8bb96;border-radius:9px;
+    background:#fff6ec;font-size:11.5px;font-weight:800;color:#a5531f;line-height:1.5}
+  .addbox .manynote[hidden]{display:none}
+  .addbox.many .filepick{background:#fdeee0}
+
   /* ===== 기록 수정(품목·개수) ===== */
   .det-h .acts{flex:none;margin-left:auto;display:inline-flex;gap:6px}
   .det-h .acts .del{margin-left:0}
@@ -4161,8 +4167,9 @@
           '<label class="filepick" for="file-' + uid + '">' +
             '<span class="fpick">📷 사진 선택</span>' +
             '<span class="fname">선택 안 함</span>' +
-            '<input type="file" id="file-' + uid + '" class="phfile" accept="image/*">' +
+            '<input type="file" id="file-' + uid + '" class="phfile" accept="image/*" multiple>' +
           '</label>' +
+          '<p class="manynote" hidden></p>' +
           '<div class="datebar">' +
             '<span class="dlabel">저장 날짜</span>' +
             '<input type="date" id="date-' + uid + '" class="phdate" value="' + ds + '"' +
@@ -4185,6 +4192,10 @@
     if (form.getAttribute("data-ai-busy")) return;   /* AI가 세는 동안은 버튼 문구를 그대로 둔다 */
     var b = qs(".submitbtn", form), d = qs(".phdate", form);
     if (!b) return;
+    /* 여러 장을 고르면 "N장 한꺼번에 올리기" */
+    var fi = qs(".phfile", form);
+    var nf = (fi && fi.files) ? fi.files.length : 0;
+    if (nf > 1) { b.textContent = nf + "장 한꺼번에 올리기"; return; }
     var ds = (d && d.value) ? d.value : (form.getAttribute("data-date") || selDate);
     b.textContent = (ds && ds !== selDate) ? shortDate(ds) + "에 올리기" : "올리기";
   }
@@ -4549,6 +4560,114 @@
     });
   }
 
+  /* ---------- 여러 장 한꺼번에 (사진마다 1건) ---------- */
+  function manyBaseDate(form) {
+    var d = form ? qs(".phdate", form) : null;
+    var ds = (d && d.value) ? String(d.value) : (form ? form.getAttribute("data-date") : "");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ds) || !isValidDate(ds)) ds = (form ? form.getAttribute("data-date") : "") || selDate || todayStr();
+    if (!isValidDate(ds)) ds = todayStr();
+    return ds;
+  }
+
+  function handleAddMany(form) {
+    var fileIn = qs(".phfile", form);
+    var files = (fileIn && fileIn.files) ? fileIn.files : null;
+    var n = files ? files.length : 0;
+    if (!n) return;
+    var nameIn = qs(".phname", form), msg = qs(".addmsg", form), submit = qs(".submitbtn", form);
+    var baseItem = nameIn ? String(nameIn.value || "").replace(/\s+/g, " ").replace(/^ | $/g, "") : "";
+    var fallbackItem = baseItem || "버린 물건";
+    var baseDate = manyBaseDate(form);
+    var cfg = aiGet(), aiOn = !!cfg.key;
+    var okN = 0, failN = 0, noPhoto = 0, guessN = 0, lastDate = "";
+
+    if (submit) submit.disabled = true;
+    setMsg(msg, "0/" + n + " 처리 중…", true);
+    aiFormNote(form, aiOn
+      ? "🤖 사진마다 촬영일·품목·개수를 차례로 읽는 중… (한 장에 몇 초씩 걸려요)"
+      : "🤖 AI 키가 없어서 사진마다 '" + fallbackItem + "'·1개로 저장해요", aiOn ? "busy" : "");
+
+    function store(file, item, qty, ds, label, guessed, i) {
+      var now = new Date();
+      var rec = {
+        id: "r" + now.getTime().toString(36) + Math.floor(Math.random() * 1679616).toString(36) +
+            Math.floor(Math.random() * 1679616).toString(36),
+        date: ds,
+        day: parseInt(ds.slice(8, 10), 10),
+        item: item,
+        qty: qty,
+        time: pad2(now.getHours()) + ":" + pad2(now.getMinutes()),
+        ts: now.toISOString(),
+        photo: ""
+      };
+      handlePhoto(file, function (photo, photoErr) {
+        rec.photo = photo || "";
+        if (photoErr) noPhoto++;
+        persist(rec, function (ok, saved) {
+          if (ok) {
+            map[saved.id] = saved;
+            okN++;
+            if (guessed) guessN++;
+            if (!lastDate || ds > lastDate) lastDate = ds;
+          } else {
+            failN++;
+          }
+          step(i + 1);
+        });
+      });
+    }
+
+    function step(i) {
+      if (i >= n) { finish(); return; }
+      var file = files[i];
+      var label = String((file && file.name) || "").slice(0, 18);
+      setMsg(msg, (i + 1) + "/" + n + " 처리 중…" + (label ? " " + label : ""), true);
+      if (submit) submit.textContent = "🤖 " + (i + 1) + "/" + n + " 처리 중…";
+
+      readExifFile(file, function (exif) {
+        var exifDate = (exif && isValidDate(exif)) ? exif : "";
+
+        function fallback() { store(file, fallbackItem, 1, exifDate || baseDate, label, aiOn, i); }
+
+        if (!aiOn) { fallback(); return; }
+        aiPrepare(file, function (dataUrl) {
+          if (!dataUrl) { fallback(); return; }
+          aiRequest(dataUrl, cfg, function (res, err) {
+            if (err || !res) { fallback(); return; }
+            var ds = (res.date && isValidDate(res.date)) ? res.date : (exifDate || baseDate);
+            var qty = parseInt(res.count, 10);
+            if (!qty || qty < 1) { qty = 1; }
+            if (qty > 99) qty = 99;
+            var item = String(res.items || "").replace(/^ | $/g, "") || fallbackItem;
+            store(file, item, qty, ds, label, false, i);
+          });
+        });
+      });
+    }
+
+    function finish() {
+      if (submit) submit.disabled = false;
+      aiFormNote(form, "", "");
+      var head;
+      if (okN && !failN) head = okN + "건 모두 올렸어요!";
+      else if (okN) head = (okN + failN) + "건 중 " + okN + "건 올렸어요 · " + failN + "건은 저장 실패";
+      else head = "저장하지 못했어요. 폰 저장 공간을 확인해 주세요.";
+      if (guessN) head += " · AI가 못 읽은 " + guessN + "장은 '" + fallbackItem + "' 1개로 저장";
+      if (noPhoto) head += " · 사진 " + noPhoto + "장은 못 읽어 빼고 저장";
+
+      var target = lastDate || baseDate;
+      if (isValidDate(target)) { selDate = target; setMonthOf(target); }
+      addOpen = true;
+      render();
+      var box = qs("#calDets");
+      setMsg(box ? qs(".addmsg", box) : null, head + " · 누적 " + qtySum(activeList()) + "개", !failN);
+      flash(head);
+      try { if (box && box.scrollIntoView) box.scrollIntoView({ block: "nearest" }); } catch (e) {}
+    }
+
+    step(0);
+  }
+
   /* ---------- 수정 (품목·개수) ---------- */
   function handleEdit(form) {
     var id = form.getAttribute("data-eid") || "";
@@ -4706,7 +4825,12 @@
       if (!hasClass(form, "addbox")) return;
       ev.preventDefault();
       if (form.getAttribute("data-ai-busy")) { flash("🤖 AI가 아직 날짜·개수를 세는 중이에요 · 잠깐만 기다려 주세요"); return; }
-      try { handleAdd(form); } catch (e) { flash("올리지 못했어요. 다시 해 주세요."); }
+      try {
+        var pf = qs(".phfile", form);
+        var nf = (pf && pf.files) ? pf.files.length : 0;
+        if (nf > 1) handleAddMany(form);
+        else handleAdd(form);
+      } catch (e) { flash("올리지 못했어요. 다시 해 주세요."); }
     });
   } catch (e) {}
 
@@ -4729,16 +4853,48 @@
       var pick = parentByClass(t, "filepick");
       if (!pick) return;
       var form = parentByClass(t, "addbox");
-      var has = !!(t.files && t.files.length);
+      var nFiles = (t.files && t.files.length) ? t.files.length : 0;
+      var has = nFiles > 0, many = nFiles > 1;
       setClass(pick, "picked", has);
+      if (form) setClass(form, "many", many);
       var fn = qs(".fname", pick);
-      if (fn) fn.textContent = has ? String(t.files[0].name || "사진 선택됨").slice(0, 22) : "선택 안 함";
+      if (fn) {
+        fn.textContent = !has ? "선택 안 함"
+          : (many ? "사진 " + nFiles + "장 선택됨" : String(t.files[0].name || "사진 선택됨").slice(0, 22));
+      }
 
       var note = form ? qs(".exifnote", form) : null;
       var dateIn = form ? qs(".phdate", form) : null;
+      var manyNote = form ? qs(".manynote", form) : null;
+      var nameIn = form ? qs(".phname", form) : null;
+      var qtyIn = form ? qs(".phqty", form) : null;
       if (note) { note.hidden = true; note.textContent = ""; setClass(note, "mute", false); }
+      if (manyNote) {
+        if (many) {
+          manyNote.textContent = "📷 " + nFiles + "장은 사진마다 1건씩 따로 올라가요 · [" + nFiles + "장 한꺼번에 올리기]를 누르면 장마다 촬영일(EXIF)을 찾고 AI가 품목·개수를 채워 저장해요. AI가 못 읽은 사진은 아래 품목명(비어 있으면 '버린 물건')과 1개로 저장돼요.";
+          manyNote.hidden = false;
+        } else {
+          manyNote.hidden = true;
+          manyNote.textContent = "";
+        }
+      }
+      if (nameIn) nameIn.placeholder = many ? "사진마다 AI가 품목을 채워요 (비우면 '버린 물건')" : "품목명 (예: 안 쓰는 믹서기)";
+      if (qtyIn) {
+        if (many) { qtyIn.value = "1"; qtyIn.disabled = true; } else { qtyIn.disabled = false; }
+      }
+      if (many) aiReset(form);
       syncSubmit(form);
       if (!has) return;
+
+      if (many) {
+        /* 여러 장: AI·EXIF는 고를 때가 아니라 올릴 때 사진마다 돌린다 */
+        if (note) {
+          note.textContent = "📅 저장할 때 사진마다 촬영일을 찾아 그 날짜로 넣어요 (못 찾으면 위 저장 날짜)";
+          note.hidden = false;
+          setClass(note, "mute", true);
+        }
+        return;
+      }
 
       /* AI 자동 인식 (키가 저장돼 있을 때만) */
       aiTryAnalyze(t.files[0], form);
@@ -5055,6 +5211,16 @@
     var b = qs(".submitbtn", form);
     if (b) b.disabled = false;
     syncSubmit(form);   /* 원래 문구("올리기" / "MM/DD에 올리기")로 복원 */
+  }
+
+  /* 여러 장으로 바꿀 때: 1장용으로 돌던 AI 응답을 무시하고 버튼 잠금을 푼다 */
+  function aiReset(form) {
+    if (!form) return;
+    form.setAttribute("data-ai-seq", String((parseInt(form.getAttribute("data-ai-seq") || "0", 10) || 0) + 1));
+    form.removeAttribute("data-ai-busy");
+    aiFormNote(form, "", "");
+    var b = qs(".submitbtn", form);
+    if (b) b.disabled = false;
   }
 
   /* 사진을 고르면: 키가 있으면 AI로 날짜·품목·개수 채우기 */
