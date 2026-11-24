@@ -485,6 +485,7 @@
   .kv2 .k{flex:none;width:42px;font-size:11.5px;font-weight:700;color:#a48d79;padding-top:2px}
   .kv2 .v{flex:1;min-width:0;color:#4a3f36;font-weight:700}
   .empty{margin:0;padding:14px 6px;text-align:center;font-size:12.5px;color:#a1907d;line-height:1.65;font-weight:600}
+  .addwrap + .empty{padding-top:8px;padding-bottom:2px}
   .empty b{color:#c25a25}
 
   /* 누적 기록 요약 */
@@ -514,7 +515,7 @@
   .rec-item:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
   .rec-item .ph{margin-bottom:7px}
 
-  .addwrap{margin:10px 0 0}
+  .addwrap{margin:0 0 11px}                 /* 당일 헤더 바로 아래, 기록 목록 위 */
   .openAdd{display:flex;align-items:center;justify-content:center;width:100%;min-height:46px;
     border:1px dashed #e8bb96;border-radius:12px;background:#fffaf3;color:#c2551f;
     font-size:13px;font-weight:800;font-family:inherit;letter-spacing:-.3px;cursor:pointer}
@@ -4212,11 +4213,11 @@
     h += '<div class="det-h"><span class="dt">' + dateLabel(selDate) + '</span>';
     if (q > 0) h += '<span class="db">' + q + '개 비움</span>';
     h += '</div>';
+    h += addUI(selDate);       /* ＋ 사진·기록 올리기 — 당일 헤더 바로 아래(기록 목록 위) */
     h += '<div class="recs" data-date="' + selDate + '">';
     for (i = 0; i < list.length; i++) h += recCard(list[i]);
     h += '</div>';
     h += '<p class="empty"' + (q ? ' style="display:none"' : '') + '>아직 기록이 없어요.<br>버릴 물건 <b>사진</b>을 올리면<br>여기에 사진과 개수가 쌓입니다.</p>';
-    h += addUI(selDate);
     h += '</div>';
     box.innerHTML = h;
     if (addOpen) {
